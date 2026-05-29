@@ -1,6 +1,6 @@
 package com.voicecal.modules.health.controller;
 
-import com.voicecal.modules.health.response.HealthResponse;
+import com.voicecal.modules.health.entity.response.HealthResponse;
 import com.voicecal.modules.health.service.HealthService;
 import java.time.OffsetDateTime;
 import org.junit.jupiter.api.Test;

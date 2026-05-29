@@ -1,4 +1,4 @@
-package com.voicecal.modules.health.response;
+package com.voicecal.modules.health.entity.response;
 
 import java.time.OffsetDateTime;
 

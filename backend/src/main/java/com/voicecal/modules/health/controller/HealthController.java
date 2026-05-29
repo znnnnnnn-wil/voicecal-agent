@@ -1,7 +1,7 @@
 package com.voicecal.modules.health.controller;
 
 import com.voicecal.common.response.ApiResponse;
-import com.voicecal.modules.health.response.HealthResponse;
+import com.voicecal.modules.health.entity.response.HealthResponse;
 import com.voicecal.modules.health.service.HealthService;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
