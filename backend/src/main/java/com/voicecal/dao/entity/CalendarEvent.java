@@ -44,15 +44,15 @@ public class CalendarEvent {
      * 日程标题，用于列表展示、搜索和语音确认。
      */
     @NotBlank(message = "日程标题不能为空")
-    @Size(max = 120, message = "日程标题不能超过 120 个字符")
-    @Column(name = "title", nullable = false, length = 120)
+    @Size(max = 100, message = "日程标题不能超过 100 个字符")
+    @Column(name = "title", nullable = false, length = 100)
     private String title;
 
     /**
      * 日程描述，保存用户补充的详细说明。
      */
-    @Size(max = 2000, message = "日程描述不能超过 2000 个字符")
-    @Column(name = "description", length = 2000)
+    @Size(max = 1000, message = "日程描述不能超过 1000 个字符")
+    @Column(name = "description", length = 1000)
     private String description;
 
     /**
@@ -85,8 +85,8 @@ public class CalendarEvent {
     /**
      * 日程地点，可用于后续地图、会议室或出行提醒扩展。
      */
-    @Size(max = 200, message = "地点不能超过 200 个字符")
-    @Column(name = "location", length = 200)
+    @Size(max = 255, message = "地点不能超过 255 个字符")
+    @Column(name = "location", length = 255)
     private String location;
 
     /**

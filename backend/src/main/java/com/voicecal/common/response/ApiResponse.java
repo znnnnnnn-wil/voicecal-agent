@@ -35,6 +35,18 @@ public class ApiResponse<T> {
     }
 
     /**
+     * 创建带自定义提示信息的成功响应。
+     *
+     * @param message 成功提示信息
+     * @param data 响应数据
+     * @param <T> 响应数据类型
+     * @return 成功响应对象
+     */
+    public static <T> ApiResponse<T> success(String message, T data) {
+        return new ApiResponse<>(true, "OK", message, data);
+    }
+
+    /**
      * 创建不包含数据的失败响应。
      *
      * @param code 业务错误码
