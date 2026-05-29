@@ -1,8 +1,16 @@
 package com.voicecal.modules.ai.tool;
 
+import com.voicecal.common.enums.ResultCodeEnum;
+import com.voicecal.common.exception.CustomException;
 import com.voicecal.common.exception.ResourceNotFoundException;
 import com.voicecal.modules.calendar.entity.request.CalendarEventCreateRequest;
+import com.voicecal.modules.calendar.entity.request.ConflictCheckRequest;
+import com.voicecal.modules.calendar.entity.request.FreeTimeQueryRequest;
 import com.voicecal.modules.calendar.entity.response.CalendarEventResponse;
+import com.voicecal.modules.calendar.entity.response.ConflictCheckResponse;
+import com.voicecal.modules.calendar.entity.response.ConflictEventResponse;
+import com.voicecal.modules.calendar.entity.response.FreeTimeSlotResponse;
+import com.voicecal.modules.calendar.service.CalendarAvailabilityService;
 import com.voicecal.modules.calendar.service.CalendarEventService;
 import dev.langchain4j.agent.tool.P;
 import dev.langchain4j.agent.tool.Tool;
@@ -21,9 +29,14 @@ import org.springframework.stereotype.Component;
 public class CalendarEventTools {
 
     private final CalendarEventService calendarEventService;
+    private final CalendarAvailabilityService calendarAvailabilityService;
 
-    public CalendarEventTools(CalendarEventService calendarEventService) {
+    public CalendarEventTools(
+            CalendarEventService calendarEventService,
+            CalendarAvailabilityService calendarAvailabilityService
+    ) {
         this.calendarEventService = calendarEventService;
+        this.calendarAvailabilityService = calendarAvailabilityService;
     }
 
     /**
@@ -52,7 +65,7 @@ public class CalendarEventTools {
             return formatEvent(calendarEventService.getEvent(id));
         } catch (ResourceNotFoundException exception) {
             return "查询日程失败：" + exception.getMessage();
-        } catch (IllegalArgumentException exception) {
+        } catch (CustomException exception) {
             return "查询日程失败：" + exception.getMessage();
         }
     }
@@ -88,14 +101,77 @@ public class CalendarEventTools {
             return "创建日程失败：时间格式不正确，请使用 ISO-8601 LocalDateTime，例如 2026-06-01T10:00:00";
         } catch (ConstraintViolationException exception) {
             return "创建日程失败：" + formatConstraintViolations(exception);
-        } catch (IllegalArgumentException exception) {
+        } catch (CustomException exception) {
             return "创建日程失败：" + exception.getMessage();
+        }
+    }
+
+    /**
+     * 检测指定时间段是否与已有日程冲突。
+     *
+     * @param startTime 开始时间，ISO-8601 LocalDateTime 字符串
+     * @param endTime 结束时间，ISO-8601 LocalDateTime 字符串
+     * @param excludeEventId 需要排除的日程 ID，可为空
+     * @return 冲突检测结果文本
+     */
+    @Tool("Check whether a time range conflicts with existing calendar events.")
+    public String checkCalendarConflict(
+            @P(name = "startTime", description = "Start time in ISO-8601 LocalDateTime format") String startTime,
+            @P(name = "endTime", description = "End time in ISO-8601 LocalDateTime format") String endTime,
+            @P(name = "excludeEventId", description = "Calendar event id to exclude", required = false)
+            Long excludeEventId
+    ) {
+        try {
+            ConflictCheckResponse response = calendarAvailabilityService.checkConflicts(new ConflictCheckRequest(
+                    parseDateTime(startTime),
+                    parseDateTime(endTime),
+                    excludeEventId
+            ));
+            if (!response.hasConflict()) {
+                return "该时间段没有日程冲突。";
+            }
+            return "该时间段存在日程冲突：\n" + formatConflictEvents(response.conflicts());
+        } catch (DateTimeParseException exception) {
+            return "冲突检测失败：时间格式不正确，请使用 ISO-8601 LocalDateTime，例如 2026-06-01T10:00:00";
+        } catch (CustomException exception) {
+            return "冲突检测失败：" + exception.getMessage();
+        }
+    }
+
+    /**
+     * 查询指定时间范围内的空闲时间段。
+     *
+     * @param startTime 查询开始时间，ISO-8601 LocalDateTime 字符串
+     * @param endTime 查询结束时间，ISO-8601 LocalDateTime 字符串
+     * @param minMinutes 最小空闲分钟数，可为空
+     * @return 空闲时间段文本
+     */
+    @Tool("Find available free time slots in a calendar time range.")
+    public String findFreeTime(
+            @P(name = "startTime", description = "Start time in ISO-8601 LocalDateTime format") String startTime,
+            @P(name = "endTime", description = "End time in ISO-8601 LocalDateTime format") String endTime,
+            @P(name = "minMinutes", description = "Minimum free slot minutes", required = false) Integer minMinutes
+    ) {
+        try {
+            List<FreeTimeSlotResponse> slots = calendarAvailabilityService.findFreeTimeSlots(new FreeTimeQueryRequest(
+                    parseDateTime(startTime),
+                    parseDateTime(endTime),
+                    minMinutes
+            ));
+            if (slots.isEmpty()) {
+                return "该时间范围内没有满足条件的空闲时间。";
+            }
+            return "可用空闲时间：\n" + formatFreeTimeSlots(slots);
+        } catch (DateTimeParseException exception) {
+            return "查询空闲时间失败：时间格式不正确，请使用 ISO-8601 LocalDateTime，例如 2026-06-01T10:00:00";
+        } catch (CustomException exception) {
+            return "查询空闲时间失败：" + exception.getMessage();
         }
     }
 
     private LocalDateTime parseDateTime(String value) {
         if (value == null || value.isBlank()) {
-            throw new IllegalArgumentException("开始时间和结束时间不能为空");
+            throw CustomException.create(ResultCodeEnum.PARAMS_ERROR, "开始时间和结束时间不能为空");
         }
         return LocalDateTime.parse(value);
     }
@@ -127,6 +203,30 @@ public class CalendarEventTools {
             builder.append(", 描述: ").append(event.description());
         }
         return builder.toString();
+    }
+
+    private String formatConflictEvents(List<ConflictEventResponse> events) {
+        return events.stream()
+                .map(event -> {
+                    StringBuilder builder = new StringBuilder();
+                    builder.append("ID: ").append(event.id())
+                            .append(", 标题: ").append(event.title())
+                            .append(", 开始: ").append(event.startTime())
+                            .append(", 结束: ").append(event.endTime());
+                    if (event.location() != null && !event.location().isBlank()) {
+                        builder.append(", 地点: ").append(event.location());
+                    }
+                    return builder.toString();
+                })
+                .collect(Collectors.joining("\n"));
+    }
+
+    private String formatFreeTimeSlots(List<FreeTimeSlotResponse> slots) {
+        return slots.stream()
+                .map(slot -> "开始: " + slot.startTime()
+                        + ", 结束: " + slot.endTime()
+                        + ", 时长: " + slot.minutes() + " 分钟")
+                .collect(Collectors.joining("\n"));
     }
 
     private String formatConstraintViolations(ConstraintViolationException exception) {

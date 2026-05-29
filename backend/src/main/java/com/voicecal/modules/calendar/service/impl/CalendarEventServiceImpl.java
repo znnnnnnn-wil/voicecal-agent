@@ -1,12 +1,17 @@
 package com.voicecal.modules.calendar.service.impl;
 
+import com.voicecal.common.enums.ResultCodeEnum;
 import com.voicecal.common.enums.dao.EventStatus;
+import com.voicecal.common.exception.CustomException;
 import com.voicecal.common.exception.ResourceNotFoundException;
 import com.voicecal.dao.entity.CalendarEvent;
 import com.voicecal.dao.repository.CalendarEventRepository;
 import com.voicecal.modules.calendar.entity.request.CalendarEventCreateRequest;
 import com.voicecal.modules.calendar.entity.request.CalendarEventUpdateRequest;
+import com.voicecal.modules.calendar.entity.request.ConflictCheckRequest;
 import com.voicecal.modules.calendar.entity.response.CalendarEventResponse;
+import com.voicecal.modules.calendar.entity.response.ConflictCheckResponse;
+import com.voicecal.modules.calendar.service.CalendarAvailabilityService;
 import com.voicecal.modules.calendar.service.CalendarEventService;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -20,9 +25,14 @@ import org.springframework.transaction.annotation.Transactional;
 public class CalendarEventServiceImpl implements CalendarEventService {
 
     private final CalendarEventRepository calendarEventRepository;
+    private final CalendarAvailabilityService calendarAvailabilityService;
 
-    public CalendarEventServiceImpl(CalendarEventRepository calendarEventRepository) {
+    public CalendarEventServiceImpl(
+            CalendarEventRepository calendarEventRepository,
+            CalendarAvailabilityService calendarAvailabilityService
+    ) {
         this.calendarEventRepository = calendarEventRepository;
+        this.calendarAvailabilityService = calendarAvailabilityService;
     }
 
     /**
@@ -35,6 +45,7 @@ public class CalendarEventServiceImpl implements CalendarEventService {
     @Transactional
     public CalendarEventResponse createEvent(CalendarEventCreateRequest request) {
         validateTimeRange(request.startTime(), request.endTime());
+        ensureNoConflicts(request.startTime(), request.endTime(), null);
 
         CalendarEvent event = new CalendarEvent();
         event.setTitle(request.title());
@@ -86,6 +97,7 @@ public class CalendarEventServiceImpl implements CalendarEventService {
         validateTimeRange(request.startTime(), request.endTime());
 
         CalendarEvent event = findActiveEvent(id);
+        ensureNoConflicts(request.startTime(), request.endTime(), id);
         event.setTitle(request.title());
         event.setDescription(request.description());
         event.setStartTime(request.startTime());
@@ -109,7 +121,10 @@ public class CalendarEventServiceImpl implements CalendarEventService {
 
     private CalendarEvent findActiveEvent(Long id) {
         return calendarEventRepository.findByIdAndStatus(id, EventStatus.ACTIVE)
-                .orElseThrow(() -> new ResourceNotFoundException("日历事件不存在"));
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        ResultCodeEnum.CALENDAR_EVENT_NOT_FOUND,
+                        "日历事件不存在"
+                ));
     }
 
     private void validateTimeRange(LocalDateTime startTime, LocalDateTime endTime) {
@@ -117,7 +132,16 @@ public class CalendarEventServiceImpl implements CalendarEventService {
             return;
         }
         if (!endTime.isAfter(startTime)) {
-            throw new IllegalArgumentException("结束时间必须晚于开始时间");
+            throw CustomException.create(ResultCodeEnum.PARAMS_ERROR, "结束时间必须晚于开始时间");
+        }
+    }
+
+    private void ensureNoConflicts(LocalDateTime startTime, LocalDateTime endTime, Long excludeEventId) {
+        ConflictCheckResponse response = calendarAvailabilityService.checkConflicts(
+                new ConflictCheckRequest(startTime, endTime, excludeEventId)
+        );
+        if (response.hasConflict()) {
+            throw CustomException.create(ResultCodeEnum.CALENDAR_EVENT_CONFLICT, "日程时间与已有日程冲突");
         }
     }
 }

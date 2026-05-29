@@ -3,11 +3,18 @@ package com.voicecal.modules.calendar.controller;
 import com.voicecal.common.response.ApiResponse;
 import com.voicecal.modules.calendar.entity.request.CalendarEventCreateRequest;
 import com.voicecal.modules.calendar.entity.request.CalendarEventUpdateRequest;
+import com.voicecal.modules.calendar.entity.request.ConflictCheckRequest;
+import com.voicecal.modules.calendar.entity.request.FreeTimeQueryRequest;
 import com.voicecal.modules.calendar.entity.response.CalendarEventResponse;
+import com.voicecal.modules.calendar.entity.response.ConflictCheckResponse;
+import com.voicecal.modules.calendar.entity.response.FreeTimeSlotResponse;
+import com.voicecal.modules.calendar.service.CalendarAvailabilityService;
 import com.voicecal.modules.calendar.service.CalendarEventQueryService;
 import com.voicecal.modules.calendar.service.CalendarEventService;
 import jakarta.validation.Valid;
+import java.time.LocalDateTime;
 import java.util.List;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -27,13 +34,16 @@ public class CalendarEventController {
 
     private final CalendarEventService calendarEventService;
     private final CalendarEventQueryService calendarEventQueryService;
+    private final CalendarAvailabilityService calendarAvailabilityService;
 
     public CalendarEventController(
             CalendarEventService calendarEventService,
-            CalendarEventQueryService calendarEventQueryService
+            CalendarEventQueryService calendarEventQueryService,
+            CalendarAvailabilityService calendarAvailabilityService
     ) {
         this.calendarEventService = calendarEventService;
         this.calendarEventQueryService = calendarEventQueryService;
+        this.calendarAvailabilityService = calendarAvailabilityService;
     }
 
     /**
@@ -55,6 +65,37 @@ public class CalendarEventController {
     @GetMapping
     public ApiResponse<List<CalendarEventResponse>> listEvents() {
         return ApiResponse.success("查询日历事件列表成功", calendarEventService.listEvents());
+    }
+
+    /**
+     * 检测指定时间段是否与已有日程冲突。
+     *
+     * @param request 冲突检测请求
+     * @return 冲突检测结果
+     */
+    @PostMapping("/conflicts")
+    public ApiResponse<ConflictCheckResponse> checkConflicts(@Valid @RequestBody ConflictCheckRequest request) {
+        return ApiResponse.success("日程冲突检测成功", calendarAvailabilityService.checkConflicts(request));
+    }
+
+    /**
+     * 查询指定时间范围内的空闲时间段。
+     *
+     * @param startTime 查询开始时间
+     * @param endTime 查询结束时间
+     * @param minMinutes 最小空闲分钟数，可为空
+     * @return 空闲时间段列表
+     */
+    @GetMapping("/free-time")
+    public ApiResponse<List<FreeTimeSlotResponse>> findFreeTimeSlots(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startTime,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endTime,
+            @RequestParam(required = false) Integer minMinutes
+    ) {
+        return ApiResponse.success(
+                "查询空闲时间成功",
+                calendarAvailabilityService.findFreeTimeSlots(new FreeTimeQueryRequest(startTime, endTime, minMinutes))
+        );
     }
 
     /**
