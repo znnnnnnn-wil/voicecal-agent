@@ -27,12 +27,12 @@ function CalendarBoard({
   const calendarDays = buildCalendarDays(events)
 
   return (
-    <section className="rounded-[32px] border border-white/10 bg-white/[0.07] p-5 shadow-2xl shadow-black/25 backdrop-blur-xl sm:p-6">
+    <section className="h-fit self-start rounded-[32px] border border-white/10 bg-white/[0.07] p-5 shadow-2xl shadow-black/25 backdrop-blur-xl sm:p-6">
       <div className="mb-5 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <p className="text-sm font-semibold text-white">日历视图</p>
           <p className="mt-1 text-xs text-slate-400">
-            {isLoading ? '正在加载后端日程...' : '基于后端已加载日程'}
+            {isLoading ? '正在加载本周日程...' : '基于本周日程接口'}
           </p>
         </div>
         <span className="w-fit rounded-full bg-white/[0.08] px-3 py-1 text-xs text-slate-300">
