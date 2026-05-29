@@ -24,10 +24,16 @@ body {
   min-width: 320px;
   min-height: 100vh;
   margin: 0;
+  background: #070b10;
 }
 
 button {
   font: inherit;
+}
+
+:focus-visible {
+  outline: 2px solid rgba(103, 232, 249, 0.7);
+  outline-offset: 3px;
 }
 
 ::selection {
@@ -45,6 +51,10 @@ button {
   background: rgba(148, 163, 184, 0.45);
 }
 
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(203, 213, 225, 0.62);
+}
+
 .voicecal-calendar {
   --fc-border-color: rgba(255, 255, 255, 0.1);
   --fc-page-bg-color: transparent;
@@ -56,6 +66,10 @@ button {
 
 .voicecal-calendar .fc {
   font-family: inherit;
+}
+
+.voicecal-calendar .fc-view-harness {
+  min-height: 520px;
 }
 
 .voicecal-calendar .fc-toolbar {
@@ -141,6 +155,11 @@ button {
   box-shadow: 0 12px 24px rgba(8, 47, 73, 0.22);
   cursor: pointer;
   overflow: hidden;
+  padding: 1px 3px;
+}
+
+.voicecal-calendar .fc-event:hover {
+  filter: brightness(1.08);
 }
 
 .voicecal-calendar .fc-event-title,
@@ -181,5 +200,14 @@ button {
 
   .voicecal-calendar .fc-daygrid-day-frame {
     min-height: 84px;
+  }
+
+  .voicecal-calendar .fc-view-harness {
+    min-height: 460px;
+  }
+
+  .voicecal-calendar .fc-event-title,
+  .voicecal-calendar .fc-event-time {
+    font-size: 11px;
   }
 }

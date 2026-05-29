@@ -342,7 +342,7 @@ function App() {
   return (
     <AppShell>
       <TopNav />
-      <main className="mx-auto grid w-full max-w-7xl items-start gap-5 px-5 py-6 sm:px-8 lg:grid-cols-12 lg:px-10">
+      <main className="mx-auto grid w-full max-w-7xl items-start gap-5 px-4 py-5 sm:px-8 sm:py-6 lg:grid-cols-12 lg:px-10">
         <section className="grid self-start gap-5 lg:col-span-8">
           <VoiceAssistantCard
             command={command}

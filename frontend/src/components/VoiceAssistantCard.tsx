@@ -140,7 +140,8 @@ function VoiceAssistantCard({
             说出或输入你的日程指令
           </h1>
           <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-400">
-            使用浏览器语音识别录入指令，也可以直接输入文字。AI 回复后会自动语音播报。
+            Use voice or text to manage your calendar with AI tool calling. Conflict detection,
+            free-time search, reminders, logs, and ICS export are available.
           </p>
         </div>
         <span className={`w-fit rounded-full border px-3 py-1 text-xs font-medium ${meta.className}`}>
@@ -149,7 +150,7 @@ function VoiceAssistantCard({
       </div>
 
       <div className="mt-6 grid gap-4 xl:grid-cols-[0.75fr_1.25fr]">
-        <div className="rounded-3xl border border-white/10 bg-[#0d131a]/80 p-4">
+        <div className="rounded-3xl border border-white/10 bg-[#0d131a]/80 p-4 shadow-inner shadow-white/[0.02]">
           <div className="flex items-center justify-between gap-4">
             <div>
               <p className="text-sm font-semibold text-white">语音录入</p>
@@ -164,14 +165,14 @@ function VoiceAssistantCard({
               className={`relative grid size-16 place-items-center rounded-full border text-2xl transition focus:outline-none focus:ring-2 focus:ring-cyan-200 focus:ring-offset-2 focus:ring-offset-[#0d131a] disabled:cursor-not-allowed disabled:opacity-50 ${
                 isListening
                   ? 'border-rose-200/40 bg-rose-300/20 text-rose-50 shadow-xl shadow-rose-950/40'
-                  : 'border-cyan-200/30 bg-cyan-300/15 text-cyan-50 hover:bg-cyan-300/25'
+                  : 'border-cyan-200/30 bg-cyan-300/15 text-cyan-50 shadow-lg shadow-cyan-950/30 hover:bg-cyan-300/25'
               }`}
               disabled={!isRecognitionSupported}
               onClick={handleMicClick}
               type="button"
             >
               {isListening && <span className="absolute inset-0 animate-ping rounded-full bg-rose-300/20" />}
-              <span className="relative">🎙</span>
+              <span className="relative grid size-7 place-items-center rounded-full bg-white/10 text-base">●</span>
             </button>
           </div>
 
@@ -208,7 +209,7 @@ function VoiceAssistantCard({
           )}
         </div>
 
-        <div className="rounded-3xl border border-white/10 bg-[#0d131a]/80 p-4">
+        <div className="rounded-3xl border border-white/10 bg-[#0d131a]/80 p-4 shadow-inner shadow-white/[0.02]">
           <textarea
             className="min-h-32 w-full resize-none rounded-2xl border border-white/10 bg-white/[0.06] px-4 py-4 text-sm leading-6 text-slate-100 outline-none transition placeholder:text-slate-500 focus:border-cyan-200/50 focus:bg-white/[0.08] focus:ring-4 focus:ring-cyan-300/10"
             onChange={(event) => onCommandChange(event.target.value)}
@@ -219,6 +220,7 @@ function VoiceAssistantCard({
           <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex flex-wrap items-center gap-3">
               <button
+                aria-label="发送指令给 AI"
                 className="rounded-full bg-white px-5 py-3 text-sm font-semibold text-slate-950 shadow-xl shadow-cyan-950/30 transition hover:-translate-y-0.5 hover:bg-cyan-100 focus:outline-none focus:ring-2 focus:ring-cyan-200 focus:ring-offset-2 focus:ring-offset-[#0d131a] disabled:cursor-not-allowed disabled:opacity-70 disabled:hover:translate-y-0"
                 disabled={isLoading}
                 onClick={onRunCommand}
@@ -227,6 +229,7 @@ function VoiceAssistantCard({
                 {isLoading ? '发送中...' : '发送给 AI'}
               </button>
               <button
+                aria-label="清空当前指令"
                 className="rounded-full border border-white/15 bg-white/[0.06] px-4 py-3 text-sm font-semibold text-white transition hover:border-white/25 hover:bg-white/[0.1] focus:outline-none focus:ring-2 focus:ring-white/30 focus:ring-offset-2 focus:ring-offset-[#0d131a]"
                 onClick={() => {
                   resetTranscript()
@@ -240,10 +243,15 @@ function VoiceAssistantCard({
             <p className="text-xs text-slate-500">发送前可编辑识别文本</p>
           </div>
 
-          <div className="mt-5 flex flex-wrap gap-2">
+          <div className="mt-5 rounded-2xl border border-white/10 bg-white/[0.035] p-3">
+            <div className="mb-3 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+              <p className="text-xs font-semibold text-white">Try one of these demo commands.</p>
+              <p className="text-[11px] text-amber-100/80">Delete and update actions require confirmation.</p>
+            </div>
+            <div className="flex flex-wrap gap-2">
             {examples.map((example) => (
               <button
-                className="rounded-full border border-white/10 bg-white/[0.06] px-3 py-2 text-xs font-medium text-slate-200 transition hover:border-cyan-200/30 hover:bg-cyan-300/10 hover:text-cyan-50"
+                className="rounded-full border border-white/10 bg-white/[0.06] px-3 py-2 text-xs font-medium text-slate-200 transition hover:border-cyan-200/30 hover:bg-cyan-300/10 hover:text-cyan-50 focus:outline-none focus:ring-2 focus:ring-cyan-200/40 focus:ring-offset-2 focus:ring-offset-[#0d131a]"
                 key={example}
                 onClick={() => onCommandChange(example)}
                 type="button"
@@ -251,6 +259,7 @@ function VoiceAssistantCard({
                 {example}
               </button>
             ))}
+            </div>
           </div>
 
           {error && (
@@ -271,6 +280,7 @@ function VoiceAssistantCard({
           </div>
           <div className="flex flex-wrap gap-2">
             <button
+              aria-label="重新播报 AI 回复"
               className="rounded-full border border-cyan-200/20 bg-cyan-300/10 px-4 py-2 text-xs font-semibold text-cyan-50 transition hover:bg-cyan-300/15 disabled:cursor-not-allowed disabled:opacity-50"
               disabled={!isSpeechSupported || isLoading || !reply.trim()}
               onClick={handleReplay}
@@ -279,6 +289,7 @@ function VoiceAssistantCard({
               重新播报
             </button>
             <button
+              aria-label="停止语音播报"
               className="rounded-full border border-white/15 bg-white/[0.06] px-4 py-2 text-xs font-semibold text-white transition hover:bg-white/[0.1] disabled:cursor-not-allowed disabled:opacity-50"
               disabled={!isSpeechSupported || !isSpeaking}
               onClick={stop}
