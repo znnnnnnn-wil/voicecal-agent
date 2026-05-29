@@ -1,3 +1,4 @@
+import { getCategoryBadgeClass, getCategoryLabel } from '../lib/categoryUtils'
 import type { CalendarEvent } from '../types/calendar'
 
 type EventDetailPanelProps = {
@@ -54,7 +55,12 @@ function EventDetailPanel({ event, onClose }: EventDetailPanelProps) {
           <DetailRow label="开始时间" value={formatDateTime(event.startTime)} />
           <DetailRow label="结束时间" value={formatDateTime(event.endTime)} />
           <DetailRow label="地点" value={event.location || '未设置'} />
-          <DetailRow label="分类" value={event.category || '未设置'} />
+          <div className="flex items-start justify-between gap-4 border-b border-white/10 pb-3">
+            <span className="text-xs font-semibold text-slate-500">分类</span>
+            <span className={`rounded-full border px-2.5 py-1 text-[11px] ${getCategoryBadgeClass(event.category)}`}>
+              {getCategoryLabel(event.category)}
+            </span>
+          </div>
           <DetailRow label="提醒" value={formatReminder(event)} />
           {event.remindedAt && <DetailRow label="提醒时间" value={formatDateTime(event.remindedAt)} />}
 

@@ -1,3 +1,4 @@
+import { getCategoryBadgeClass, getCategoryLabel, normalizeCategory } from '../lib/categoryUtils'
 import type { CalendarEvent } from '../types/calendar'
 
 type WeekSummaryProps = {
@@ -8,6 +9,7 @@ type WeekSummaryProps = {
 
 function WeekSummary({ events, isLoading, isUsingDemoEvents }: WeekSummaryProps) {
   const weekStats = buildWeekStats(events)
+  const categoryStats = buildCategoryStats(events)
 
   return (
     <section className="h-fit self-start rounded-[28px] border border-white/10 bg-white/[0.06] p-5 shadow-2xl shadow-black/25 backdrop-blur-xl">
@@ -25,6 +27,17 @@ function WeekSummary({ events, isLoading, isUsingDemoEvents }: WeekSummaryProps)
             <p className="mt-1 text-xs text-slate-400">{stat.label}</p>
             <p className="mt-2 text-[11px] text-cyan-100/70">{stat.hint}</p>
           </div>
+        ))}
+      </div>
+
+      <div className="mt-4 flex flex-wrap gap-2">
+        {categoryStats.map((stat) => (
+          <span
+            className={`rounded-full border px-2.5 py-1 text-[11px] ${getCategoryBadgeClass(stat.category)}`}
+            key={stat.category}
+          >
+            {getCategoryLabel(stat.category)} · {stat.count}
+          </span>
         ))}
       </div>
     </section>
@@ -71,6 +84,16 @@ function getTomorrowKey() {
 
 function formatNumber(value: number) {
   return Number.isInteger(value) ? String(value) : value.toFixed(1)
+}
+
+function buildCategoryStats(events: CalendarEvent[]) {
+  const counts = events.reduce<Record<string, number>>((accumulator, event) => {
+    const category = normalizeCategory(event.category)
+    accumulator[category] = (accumulator[category] ?? 0) + 1
+    return accumulator
+  }, {})
+
+  return Object.entries(counts).map(([category, count]) => ({ category, count }))
 }
 
 export default WeekSummary

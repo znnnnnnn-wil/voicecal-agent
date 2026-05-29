@@ -60,6 +60,7 @@ export const demoCalendarEvents: CalendarEvent[] = [
     startTime: '2026-05-29T09:00:00',
     endTime: '2026-05-29T09:30:00',
     location: '线上会议',
+    category: 'MEETING',
     reminderMinutes: 10,
     reminderTriggered: true,
     remindedAt: '2026-05-29T08:50:00',
@@ -71,6 +72,7 @@ export const demoCalendarEvents: CalendarEvent[] = [
     startTime: '2026-05-29T11:30:00',
     endTime: '2026-05-29T12:30:00',
     location: '会议室 A',
+    category: 'MEETING',
     reminderMinutes: 15,
     reminderTriggered: false,
     remindedAt: null,
@@ -82,6 +84,7 @@ export const demoCalendarEvents: CalendarEvent[] = [
     startTime: '2026-05-29T14:00:00',
     endTime: '2026-05-29T14:45:00',
     location: '销售线索',
+    category: 'WORK',
     reminderMinutes: null,
     reminderTriggered: false,
     remindedAt: null,
@@ -93,6 +96,7 @@ export const demoCalendarEvents: CalendarEvent[] = [
     startTime: '2026-05-29T16:00:00',
     endTime: '2026-05-29T17:30:00',
     location: '勿扰模式',
+    category: 'LIFE',
   },
   {
     id: 9005,
@@ -100,6 +104,7 @@ export const demoCalendarEvents: CalendarEvent[] = [
     startTime: '2026-05-25T09:00:00',
     endTime: '2026-05-25T10:00:00',
     location: '远程',
+    category: 'WORK',
   },
   {
     id: 9006,
@@ -107,6 +112,7 @@ export const demoCalendarEvents: CalendarEvent[] = [
     startTime: '2026-05-25T15:00:00',
     endTime: '2026-05-25T16:00:00',
     location: '会议室 B',
+    category: 'MEETING',
   },
   {
     id: 9007,
@@ -114,6 +120,7 @@ export const demoCalendarEvents: CalendarEvent[] = [
     startTime: '2026-05-26T10:30:00',
     endTime: '2026-05-26T11:30:00',
     location: '线上',
+    category: 'INTERVIEW',
   },
   {
     id: 9008,
@@ -121,6 +128,7 @@ export const demoCalendarEvents: CalendarEvent[] = [
     startTime: '2026-05-26T14:00:00',
     endTime: '2026-05-26T15:00:00',
     location: '办公室',
+    category: 'WORK',
   },
   {
     id: 9009,
@@ -128,6 +136,7 @@ export const demoCalendarEvents: CalendarEvent[] = [
     startTime: '2026-05-27T11:00:00',
     endTime: '2026-05-27T12:00:00',
     location: '会议室 C',
+    category: 'MEETING',
   },
   {
     id: 9010,
@@ -135,6 +144,7 @@ export const demoCalendarEvents: CalendarEvent[] = [
     startTime: '2026-05-28T09:30:00',
     endTime: '2026-05-28T10:30:00',
     location: '线上',
+    category: 'WORK',
   },
   {
     id: 9011,
@@ -142,6 +152,7 @@ export const demoCalendarEvents: CalendarEvent[] = [
     startTime: '2026-05-28T16:00:00',
     endTime: '2026-05-28T17:00:00',
     location: '勿扰模式',
+    category: 'LIFE',
   },
 ]
 
@@ -154,8 +165,27 @@ export const demoDailySummary: DailySummary = {
   timezone: 'Asia/Shanghai',
   eventCount: demoTodayEvents.length,
   busyMinutes: 225,
+  categoryStats: {
+    MEETING: 2,
+    WORK: 1,
+    LIFE: 1,
+  },
+  earliestEvent: {
+    id: 9001,
+    title: '产品晨会',
+    startTime: '2026-05-29T09:00:00',
+    endTime: '2026-05-29T09:30:00',
+    category: 'MEETING',
+  },
+  latestEvent: {
+    id: 9004,
+    title: '专注时间',
+    startTime: '2026-05-29T16:00:00',
+    endTime: '2026-05-29T17:30:00',
+    category: 'LIFE',
+  },
   summary:
-    '今天共有 4 个 demo 日程，已占用约 225 分钟。第一个日程从 09:00 开始，下午适合保留专注时间。',
+    '今天共有 4 个 demo 日程，已占用约 225 分钟。主要安排集中在 MEETING 分类，第一个日程是「产品晨会」，从 09:00 开始。',
   events: demoTodayEvents,
 }
 

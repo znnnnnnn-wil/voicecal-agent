@@ -1,3 +1,4 @@
+import { getCategoryBadgeClass, getCategoryLabel } from '../lib/categoryUtils'
 import type { CalendarEvent } from '../types/calendar'
 
 const statusClass = {
@@ -89,9 +90,14 @@ function TodaySchedule({
                   <p className="mt-1 text-xs text-slate-500">{event.location || '未设置地点'}</p>
                   <p className="mt-2 text-[11px] text-slate-500">{formatReminder(event)}</p>
                 </div>
-                <span className={`shrink-0 rounded-full border px-2.5 py-1 text-[11px] ${statusClass[getEventStatus(event)]}`}>
-                  {statusText[getEventStatus(event)]}
-                </span>
+                <div className="flex shrink-0 flex-col items-end gap-2">
+                  <span className={`rounded-full border px-2.5 py-1 text-[11px] ${getCategoryBadgeClass(event.category)}`}>
+                    {getCategoryLabel(event.category)}
+                  </span>
+                  <span className={`rounded-full border px-2.5 py-1 text-[11px] ${statusClass[getEventStatus(event)]}`}>
+                    {statusText[getEventStatus(event)]}
+                  </span>
+                </div>
               </div>
             </div>
           ))}
