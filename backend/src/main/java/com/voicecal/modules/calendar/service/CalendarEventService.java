@@ -1,5 +1,6 @@
 package com.voicecal.modules.calendar.service;
 
+import com.voicecal.common.enums.dao.EventCategory;
 import com.voicecal.modules.calendar.entity.request.CalendarEventCreateRequest;
 import com.voicecal.modules.calendar.entity.request.CalendarEventUpdateRequest;
 import com.voicecal.modules.calendar.entity.response.CalendarEventResponse;
@@ -24,6 +25,14 @@ public interface CalendarEventService {
      * @return 按开始时间升序排列的日历事件列表
      */
     List<CalendarEventResponse> listEvents();
+
+    /**
+     * 查询有效日历事件列表，可按分类筛选。
+     *
+     * @param category 日程分类，可为空
+     * @return 按开始时间升序排列的日历事件列表
+     */
+    List<CalendarEventResponse> listEvents(EventCategory category);
 
     /**
      * 根据 ID 查询有效日历事件。

@@ -1,6 +1,7 @@
 package com.voicecal.modules.calendar.service.impl;
 
 import com.voicecal.common.enums.ResultCodeEnum;
+import com.voicecal.common.enums.dao.EventCategory;
 import com.voicecal.common.enums.dao.EventStatus;
 import com.voicecal.common.exception.CustomException;
 import com.voicecal.common.exception.ResourceNotFoundException;
@@ -12,6 +13,7 @@ import com.voicecal.modules.calendar.entity.request.ConflictCheckRequest;
 import com.voicecal.modules.calendar.entity.response.CalendarEventResponse;
 import com.voicecal.modules.calendar.entity.response.ConflictCheckResponse;
 import com.voicecal.modules.calendar.service.CalendarAvailabilityService;
+import com.voicecal.modules.calendar.service.CalendarEventCategoryResolver;
 import com.voicecal.modules.calendar.service.CalendarEventService;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -26,13 +28,16 @@ public class CalendarEventServiceImpl implements CalendarEventService {
 
     private final CalendarEventRepository calendarEventRepository;
     private final CalendarAvailabilityService calendarAvailabilityService;
+    private final CalendarEventCategoryResolver categoryResolver;
 
     public CalendarEventServiceImpl(
             CalendarEventRepository calendarEventRepository,
-            CalendarAvailabilityService calendarAvailabilityService
+            CalendarAvailabilityService calendarAvailabilityService,
+            CalendarEventCategoryResolver categoryResolver
     ) {
         this.calendarEventRepository = calendarEventRepository;
         this.calendarAvailabilityService = calendarAvailabilityService;
+        this.categoryResolver = categoryResolver;
     }
 
     /**
@@ -56,6 +61,7 @@ public class CalendarEventServiceImpl implements CalendarEventService {
         event.setLocation(request.location());
         event.setReminderMinutes(request.reminderMinutes());
         event.setReminderTriggered(false);
+        event.setCategory(categoryResolver.resolve(request.category(), request.title()));
         event.setStatus(EventStatus.ACTIVE);
 
         return CalendarEventResponse.from(calendarEventRepository.save(event));
@@ -69,7 +75,22 @@ public class CalendarEventServiceImpl implements CalendarEventService {
     @Override
     @Transactional(readOnly = true)
     public List<CalendarEventResponse> listEvents() {
-        return calendarEventRepository.findByStatusOrderByStartTimeAsc(EventStatus.ACTIVE)
+        return listEvents(null);
+    }
+
+    /**
+     * 查询有效日历事件列表，可按分类筛选。
+     *
+     * @param category 日程分类，可为空
+     * @return 按开始时间升序排列的日历事件列表
+     */
+    @Override
+    @Transactional(readOnly = true)
+    public List<CalendarEventResponse> listEvents(EventCategory category) {
+        List<CalendarEvent> events = category == null
+                ? calendarEventRepository.findByStatusOrderByStartTimeAsc(EventStatus.ACTIVE)
+                : calendarEventRepository.findByStatusAndCategoryOrderByStartTimeAsc(EventStatus.ACTIVE, category);
+        return events
                 .stream()
                 .map(CalendarEventResponse::from)
                 .toList();
@@ -110,6 +131,9 @@ public class CalendarEventServiceImpl implements CalendarEventService {
         event.setReminderMinutes(request.reminderMinutes());
         event.setReminderTriggered(false);
         event.setRemindedAt(null);
+        if (request.category() != null) {
+            event.setCategory(request.category());
+        }
 
         return CalendarEventResponse.from(event);
     }
