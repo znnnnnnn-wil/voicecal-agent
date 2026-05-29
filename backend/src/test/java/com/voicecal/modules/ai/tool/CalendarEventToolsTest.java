@@ -86,6 +86,42 @@ class CalendarEventToolsTest {
         assertThat(calendarEventRepository.findAll()).isEmpty();
     }
 
+    @Test
+    void checkCalendarConflict_shouldReturnConflictSummary() {
+        calendarEventRepository.saveAndFlush(createEvent("需求评审", 10, 11));
+
+        String result = calendarEventTools.checkCalendarConflict(
+                "2026-05-29T10:30:00",
+                "2026-05-29T11:30:00",
+                null
+        );
+
+        assertThat(result)
+                .contains("存在日程冲突")
+                .contains("需求评审")
+                .contains("2026-05-29T10:00");
+    }
+
+    @Test
+    void findFreeTime_shouldReturnAvailableSlots() {
+        calendarEventRepository.save(createEvent("会议一", 14, 15));
+        calendarEventRepository.save(createEvent("会议二", 16, 17));
+        calendarEventRepository.flush();
+
+        String result = calendarEventTools.findFreeTime(
+                "2026-05-29T13:00:00",
+                "2026-05-29T18:00:00",
+                30
+        );
+
+        assertThat(result)
+                .contains("可用空闲时间")
+                .contains("开始: 2026-05-29T13:00")
+                .contains("结束: 2026-05-29T14:00")
+                .contains("开始: 2026-05-29T17:00")
+                .contains("结束: 2026-05-29T18:00");
+    }
+
     private CalendarEvent createEvent(String title, int startHour, int endHour) {
         CalendarEvent event = new CalendarEvent();
         event.setTitle(title);

@@ -110,6 +110,24 @@ class CalendarEventControllerTest {
     }
 
     @Test
+    void createEvent_shouldReturnBadRequest_whenTimeConflictsWithExistingEvent() throws Exception {
+        calendarEventRepository.saveAndFlush(createEvent("已有会议", 10, 11));
+        Map<String, Object> request = validRequest(
+                "冲突会议",
+                "时间与已有会议重叠",
+                "2026-05-29T10:30:00",
+                "2026-05-29T11:30:00",
+                "线上"
+        );
+
+        mockMvc.perform(post("/api/calendar/events")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("日程时间与已有日程冲突"));
+    }
+
+    @Test
     void listEvents_shouldReturnEventsOrderedByStartTimeAsc() throws Exception {
         calendarEventRepository.save(createEvent("下午会议", 15, 16));
         calendarEventRepository.save(createEvent("上午会议", 9, 10));
@@ -187,6 +205,26 @@ class CalendarEventControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void updateEvent_shouldReturnBadRequest_whenTimeConflictsWithAnotherEvent() throws Exception {
+        CalendarEvent event = calendarEventRepository.save(createEvent("待更新会议", 9, 10));
+        calendarEventRepository.save(createEvent("已有会议", 11, 12));
+        calendarEventRepository.flush();
+        Map<String, Object> request = validRequest(
+                "冲突更新会议",
+                "更新后与已有会议重叠",
+                "2026-05-29T11:30:00",
+                "2026-05-29T12:30:00",
+                "会议室 A"
+        );
+
+        mockMvc.perform(put("/api/calendar/events/{id}", event.getId())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("日程时间与已有日程冲突"));
     }
 
     @Test
