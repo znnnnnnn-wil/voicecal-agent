@@ -7,6 +7,8 @@ export type CalendarEvent = {
   location?: string | null
   category?: string | null
   reminderMinutes?: number | null
+  reminderTriggered?: boolean | null
+  remindedAt?: string | null
   createdAt?: string
   updatedAt?: string
 }

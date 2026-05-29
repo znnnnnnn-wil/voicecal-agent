@@ -83,6 +83,18 @@ public class CalendarEvent {
     private Integer reminderMinutes;
 
     /**
+     * 提醒是否已经触发，避免同一个日程重复触发提醒。
+     */
+    @Column(name = "reminder_triggered", nullable = false)
+    private Boolean reminderTriggered;
+
+    /**
+     * 提醒实际触发时间，未触发时为空。
+     */
+    @Column(name = "reminded_at")
+    private LocalDateTime remindedAt;
+
+    /**
      * 日程地点，可用于后续地图、会议室或出行提醒扩展。
      */
     @Size(max = 255, message = "地点不能超过 255 个字符")
@@ -142,6 +154,9 @@ public class CalendarEvent {
         if (status == null) {
             status = EventStatus.ACTIVE;
         }
+        if (reminderTriggered == null) {
+            reminderTriggered = false;
+        }
     }
 
     public Long getId() {
@@ -194,6 +209,22 @@ public class CalendarEvent {
 
     public void setReminderMinutes(Integer reminderMinutes) {
         this.reminderMinutes = reminderMinutes;
+    }
+
+    public Boolean getReminderTriggered() {
+        return reminderTriggered;
+    }
+
+    public void setReminderTriggered(Boolean reminderTriggered) {
+        this.reminderTriggered = reminderTriggered;
+    }
+
+    public LocalDateTime getRemindedAt() {
+        return remindedAt;
+    }
+
+    public void setRemindedAt(LocalDateTime remindedAt) {
+        this.remindedAt = remindedAt;
     }
 
     public String getLocation() {
