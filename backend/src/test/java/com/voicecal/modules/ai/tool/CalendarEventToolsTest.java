@@ -3,6 +3,7 @@ package com.voicecal.modules.ai.tool;
 import com.voicecal.common.enums.dao.EventStatus;
 import com.voicecal.dao.entity.CalendarEvent;
 import com.voicecal.dao.repository.CalendarEventRepository;
+import com.voicecal.modules.assistant.pending.PendingActionStore;
 import java.time.LocalDateTime;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -27,8 +28,12 @@ class CalendarEventToolsTest {
     @Autowired
     private CalendarEventRepository calendarEventRepository;
 
+    @Autowired
+    private PendingActionStore pendingActionStore;
+
     @BeforeEach
     void setUp() {
+        pendingActionStore.clear();
         calendarEventRepository.deleteAll();
         calendarEventRepository.flush();
     }
@@ -120,6 +125,55 @@ class CalendarEventToolsTest {
                 .contains("结束: 2026-05-29T14:00")
                 .contains("开始: 2026-05-29T17:00")
                 .contains("结束: 2026-05-29T18:00");
+    }
+
+    @Test
+    void createPendingDeleteAction_shouldCreateActionWithoutDeletingEvent() {
+        CalendarEvent event = calendarEventRepository.saveAndFlush(createEvent("待删除会议", 10, 11));
+
+        String result = calendarEventTools.createPendingDeleteAction("conversation-a", event.getId());
+
+        assertThat(result)
+                .contains("已创建待确认删除操作")
+                .contains("操作 ID")
+                .contains("待删除会议");
+        assertThat(calendarEventRepository.findById(event.getId())).isPresent();
+        assertThat(pendingActionStore.findByConversationId("conversation-a")).hasSize(1);
+    }
+
+    @Test
+    void confirmPendingAction_shouldExecutePendingDeleteAction() {
+        CalendarEvent event = calendarEventRepository.saveAndFlush(createEvent("待删除会议", 10, 11));
+        String createResult = calendarEventTools.createPendingDeleteAction("conversation-a", event.getId());
+        String actionId = pendingActionStore.findByConversationId("conversation-a").get(0).id();
+
+        String confirmResult = calendarEventTools.confirmPendingAction("conversation-a", actionId);
+
+        assertThat(createResult).contains("已创建待确认删除操作");
+        assertThat(confirmResult).isEqualTo("已删除日程");
+        assertThat(calendarEventRepository.findById(event.getId())).isEmpty();
+    }
+
+    @Test
+    void createPendingUpdateAction_shouldCreateActionWithoutUpdatingEvent() {
+        CalendarEvent event = calendarEventRepository.saveAndFlush(createEvent("旧会议", 10, 11));
+
+        String result = calendarEventTools.createPendingUpdateAction(
+                "conversation-a",
+                event.getId(),
+                "新会议",
+                "更新描述",
+                "2026-05-29T13:00:00",
+                "2026-05-29T14:00:00",
+                "会议室 A"
+        );
+
+        assertThat(result)
+                .contains("已创建待确认更新操作")
+                .contains("操作 ID")
+                .contains("旧会议");
+        assertThat(calendarEventRepository.findById(event.getId()).orElseThrow().getTitle()).isEqualTo("旧会议");
+        assertThat(pendingActionStore.findByConversationId("conversation-a")).hasSize(1);
     }
 
     private CalendarEvent createEvent(String title, int startHour, int endHour) {

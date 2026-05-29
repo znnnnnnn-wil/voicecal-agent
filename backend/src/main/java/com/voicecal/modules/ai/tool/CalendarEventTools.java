@@ -3,7 +3,10 @@ package com.voicecal.modules.ai.tool;
 import com.voicecal.common.enums.ResultCodeEnum;
 import com.voicecal.common.exception.CustomException;
 import com.voicecal.common.exception.ResourceNotFoundException;
+import com.voicecal.modules.assistant.pending.PendingActionResponse;
+import com.voicecal.modules.assistant.pending.PendingActionService;
 import com.voicecal.modules.calendar.entity.request.CalendarEventCreateRequest;
+import com.voicecal.modules.calendar.entity.request.CalendarEventUpdateRequest;
 import com.voicecal.modules.calendar.entity.request.ConflictCheckRequest;
 import com.voicecal.modules.calendar.entity.request.FreeTimeQueryRequest;
 import com.voicecal.modules.calendar.entity.response.CalendarEventResponse;
@@ -30,13 +33,16 @@ public class CalendarEventTools {
 
     private final CalendarEventService calendarEventService;
     private final CalendarAvailabilityService calendarAvailabilityService;
+    private final PendingActionService pendingActionService;
 
     public CalendarEventTools(
             CalendarEventService calendarEventService,
-            CalendarAvailabilityService calendarAvailabilityService
+            CalendarAvailabilityService calendarAvailabilityService,
+            PendingActionService pendingActionService
     ) {
         this.calendarEventService = calendarEventService;
         this.calendarAvailabilityService = calendarAvailabilityService;
+        this.pendingActionService = pendingActionService;
     }
 
     /**
@@ -166,6 +172,114 @@ public class CalendarEventTools {
             return "查询空闲时间失败：时间格式不正确，请使用 ISO-8601 LocalDateTime，例如 2026-06-01T10:00:00";
         } catch (CustomException exception) {
             return "查询空闲时间失败：" + exception.getMessage();
+        }
+    }
+
+    /**
+     * 创建待确认删除日程操作，不直接删除日程。
+     *
+     * @param conversationId 对话 ID
+     * @param eventId 日程 ID
+     * @return 待确认删除操作文本
+     */
+    @Tool("Create a pending delete action for a calendar event. This tool must not delete the event directly.")
+    public String createPendingDeleteAction(
+            @P(name = "conversationId", description = "Conversation id", required = false) String conversationId,
+            @P(name = "eventId", description = "Calendar event id to delete") Long eventId
+    ) {
+        try {
+            PendingActionResponse action = pendingActionService.createPendingDeleteAction(conversationId, eventId);
+            return "已创建待确认删除操作，请确认后再删除。\n"
+                    + "操作 ID: " + action.id() + "\n"
+                    + "目标: " + action.targetSummary() + "\n"
+                    + "过期时间: " + action.expiresAt();
+        } catch (CustomException exception) {
+            return "创建待确认删除操作失败：" + exception.getMessage();
+        }
+    }
+
+    /**
+     * 创建待确认更新日程操作，不直接修改日程。
+     *
+     * @param conversationId 对话 ID
+     * @param eventId 日程 ID
+     * @param title 更新后的标题
+     * @param description 更新后的描述
+     * @param startTime 更新后的开始时间，ISO-8601 LocalDateTime 字符串
+     * @param endTime 更新后的结束时间，ISO-8601 LocalDateTime 字符串
+     * @param location 更新后的地点
+     * @return 待确认更新操作文本
+     */
+    @Tool("Create a pending update action for a calendar event. This tool must not update the event directly.")
+    public String createPendingUpdateAction(
+            @P(name = "conversationId", description = "Conversation id", required = false) String conversationId,
+            @P(name = "eventId", description = "Calendar event id to update") Long eventId,
+            @P(name = "title", description = "Updated calendar event title") String title,
+            @P(name = "description", description = "Updated calendar event description", required = false)
+            String description,
+            @P(name = "startTime", description = "Updated start time in ISO-8601 LocalDateTime format")
+            String startTime,
+            @P(name = "endTime", description = "Updated end time in ISO-8601 LocalDateTime format") String endTime,
+            @P(name = "location", description = "Updated calendar event location", required = false) String location
+    ) {
+        try {
+            PendingActionResponse action = pendingActionService.createPendingUpdateAction(
+                    conversationId,
+                    eventId,
+                    new CalendarEventUpdateRequest(
+                            title,
+                            normalizeBlank(description),
+                            parseDateTime(startTime),
+                            parseDateTime(endTime),
+                            normalizeBlank(location)
+                    )
+            );
+            return "已创建待确认更新操作，请确认后再修改。\n"
+                    + "操作 ID: " + action.id() + "\n"
+                    + "目标: " + action.targetSummary() + "\n"
+                    + "过期时间: " + action.expiresAt();
+        } catch (DateTimeParseException exception) {
+            return "创建待确认更新操作失败：时间格式不正确，请使用 ISO-8601 LocalDateTime，例如 2026-06-01T10:00:00";
+        } catch (CustomException exception) {
+            return "创建待确认更新操作失败：" + exception.getMessage();
+        }
+    }
+
+    /**
+     * 确认并执行待确认操作。
+     *
+     * @param conversationId 对话 ID
+     * @param actionId 操作 ID
+     * @return 执行结果文本
+     */
+    @Tool("Confirm and execute a pending action by id.")
+    public String confirmPendingAction(
+            @P(name = "conversationId", description = "Conversation id", required = false) String conversationId,
+            @P(name = "actionId", description = "Pending action id") String actionId
+    ) {
+        try {
+            return pendingActionService.confirmPendingAction(conversationId, actionId);
+        } catch (CustomException exception) {
+            return "确认待确认操作失败：" + exception.getMessage();
+        }
+    }
+
+    /**
+     * 取消待确认操作。
+     *
+     * @param conversationId 对话 ID
+     * @param actionId 操作 ID
+     * @return 取消结果文本
+     */
+    @Tool("Cancel a pending action by id.")
+    public String cancelPendingAction(
+            @P(name = "conversationId", description = "Conversation id", required = false) String conversationId,
+            @P(name = "actionId", description = "Pending action id") String actionId
+    ) {
+        try {
+            return pendingActionService.cancelPendingAction(conversationId, actionId);
+        } catch (CustomException exception) {
+            return "取消待确认操作失败：" + exception.getMessage();
         }
     }
 
