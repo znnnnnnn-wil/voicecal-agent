@@ -15,7 +15,7 @@ const stateMeta = {
     className: 'border-cyan-300/20 bg-cyan-300/10 text-cyan-100',
   },
   loading: {
-    label: '生成中',
+    label: '请求中',
     className: 'border-amber-200/20 bg-amber-200/10 text-amber-100',
   },
   success: {
@@ -32,7 +32,7 @@ function AiReplyPanel({ reply, state }: AiReplyPanelProps) {
   const meta = stateMeta[state]
 
   return (
-    <section className="rounded-[28px] border border-white/10 bg-white/[0.06] p-5 shadow-2xl shadow-black/25 backdrop-blur-xl">
+    <section className="h-fit self-start rounded-[28px] border border-white/10 bg-white/[0.06] p-5 shadow-2xl shadow-black/25 backdrop-blur-xl">
       <div className="flex items-center justify-between gap-4">
         <div>
           <p className="text-sm font-semibold text-white">AI 回复</p>
@@ -43,12 +43,13 @@ function AiReplyPanel({ reply, state }: AiReplyPanelProps) {
         </span>
       </div>
 
-      <div className="mt-5 min-h-40 rounded-3xl border border-white/10 bg-[#0d131a]/70 p-5">
+      <div className="mt-5 min-h-36 rounded-3xl border border-white/10 bg-[#0d131a]/70 p-5">
         {state === 'loading' ? (
           <div className="space-y-3">
             <div className="h-3 w-4/5 animate-pulse rounded-full bg-white/15" />
             <div className="h-3 w-2/3 animate-pulse rounded-full bg-white/10" />
             <div className="h-3 w-1/2 animate-pulse rounded-full bg-white/10" />
+            <p className="pt-2 text-xs text-slate-500">正在等待后端 AI 接口响应...</p>
           </div>
         ) : (
           <p className="text-sm leading-7 text-slate-200">{reply}</p>
