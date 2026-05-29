@@ -27,15 +27,17 @@ function TodaySchedule({
   isUsingDemoEvents,
   onRetry,
 }: TodayScheduleProps) {
-  const todayEvents = getTodayEvents(events)
+  const sortedEvents = [...events].sort((left, right) =>
+    left.startTime.localeCompare(right.startTime),
+  )
 
   return (
-    <section className="rounded-[28px] border border-white/10 bg-white/[0.06] p-5 shadow-2xl shadow-black/25 backdrop-blur-xl">
+    <section className="h-fit self-start rounded-[28px] border border-white/10 bg-white/[0.06] p-5 shadow-2xl shadow-black/25 backdrop-blur-xl">
       <div className="mb-5 flex items-center justify-between">
         <div>
           <p className="text-sm font-semibold text-white">今日日程</p>
           <p className="mt-1 text-xs text-slate-400">
-            {isUsingDemoEvents ? 'Demo fallback data' : `${todayEvents.length} 个已加载安排`}
+            {isUsingDemoEvents ? 'Demo fallback data' : `${sortedEvents.length} 个后端日程`}
           </p>
         </div>
         <span className="rounded-full bg-white/[0.08] px-3 py-1 text-xs text-slate-300">今天</span>
@@ -64,7 +66,7 @@ function TodaySchedule({
         </div>
       )}
 
-      {!isLoading && todayEvents.length === 0 && (
+      {!isLoading && sortedEvents.length === 0 && (
         <div className="rounded-2xl border border-dashed border-white/15 bg-[#0d131a]/70 p-5">
           <p className="text-sm font-semibold text-white">今天暂无日程</p>
           <p className="mt-2 text-xs leading-5 text-slate-400">
@@ -73,9 +75,9 @@ function TodaySchedule({
         </div>
       )}
 
-      {!isLoading && todayEvents.length > 0 && (
+      {!isLoading && sortedEvents.length > 0 && (
       <div className="space-y-3">
-        {todayEvents.map((event) => (
+        {sortedEvents.map((event) => (
           <div
             className="rounded-2xl border border-white/10 bg-[#0d131a]/70 p-4"
             key={event.id}
@@ -96,15 +98,6 @@ function TodaySchedule({
       )}
     </section>
   )
-}
-
-function getTodayEvents(events: CalendarEvent[]) {
-  const todayKey = new Date().toISOString().slice(0, 10)
-  const todayEvents = events.filter((event) => event.startTime.startsWith(todayKey))
-  if (todayEvents.length > 0) {
-    return [...todayEvents].sort((left, right) => left.startTime.localeCompare(right.startTime))
-  }
-  return []
 }
 
 function getEventStatus(event: CalendarEvent): keyof typeof statusText {

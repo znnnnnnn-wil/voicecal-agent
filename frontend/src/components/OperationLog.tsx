@@ -12,7 +12,7 @@ type OperationLogProps = {
 
 function OperationLog({ logs }: OperationLogProps) {
   return (
-    <section className="rounded-[28px] border border-white/10 bg-white/[0.06] p-5 shadow-2xl shadow-black/25 backdrop-blur-xl">
+    <section className="h-fit self-start rounded-[28px] border border-white/10 bg-white/[0.06] p-5 shadow-2xl shadow-black/25 backdrop-blur-xl">
       <div className="mb-5">
         <p className="text-sm font-semibold text-white">操作日志</p>
         <p className="mt-1 text-xs text-slate-400">最近系统动作</p>

@@ -14,7 +14,7 @@ const feedbackText = {
 
 function StatusPreview({ chatError, eventsError, feedback, isUsingDemoEvents }: StatusPreviewProps) {
   return (
-    <section className="rounded-[28px] border border-white/10 bg-white/[0.06] p-5 shadow-2xl shadow-black/25 backdrop-blur-xl">
+    <section className="h-fit self-start rounded-[28px] border border-white/10 bg-white/[0.06] p-5 shadow-2xl shadow-black/25 backdrop-blur-xl">
       <div className="mb-5">
         <p className="text-sm font-semibold text-white">状态反馈</p>
         <p className="mt-1 text-xs text-slate-400">界面状态样式示例</p>
