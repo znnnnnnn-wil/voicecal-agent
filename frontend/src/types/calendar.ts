@@ -1,3 +1,5 @@
+export type CalendarEventCategory = 'WORK' | 'STUDY' | 'LIFE' | 'MEETING' | 'INTERVIEW' | 'OTHER'
+
 export type CalendarEvent = {
   id: number
   title: string
@@ -5,7 +7,7 @@ export type CalendarEvent = {
   startTime: string
   endTime: string
   location?: string | null
-  category?: string | null
+  category?: CalendarEventCategory | null
   reminderMinutes?: number | null
   reminderTriggered?: boolean | null
   remindedAt?: string | null

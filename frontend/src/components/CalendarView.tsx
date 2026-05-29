@@ -3,6 +3,7 @@ import dayGridPlugin from '@fullcalendar/daygrid'
 import interactionPlugin from '@fullcalendar/interaction'
 import timeGridPlugin from '@fullcalendar/timegrid'
 import type { EventClickArg, EventInput } from '@fullcalendar/core'
+import { getCategoryEventColor, getCategoryLabel } from '../lib/categoryUtils'
 import type { CalendarEvent } from '../types/calendar'
 
 type CalendarViewProps = {
@@ -106,13 +107,14 @@ function CalendarView({
 }
 
 function toCalendarEvent(event: CalendarEvent): EventInput {
+  const categoryColor = getCategoryEventColor(event.category)
   return {
     id: String(event.id),
-    title: event.title,
+    title: `[${getCategoryLabel(event.category)}] ${event.title}`,
     start: event.startTime,
     end: event.endTime,
-    backgroundColor: event.reminderTriggered ? '#059669' : '#0891b2',
-    borderColor: event.reminderTriggered ? '#6ee7b7' : '#67e8f9',
+    backgroundColor: event.reminderTriggered ? '#059669' : categoryColor.backgroundColor,
+    borderColor: event.reminderTriggered ? '#6ee7b7' : categoryColor.borderColor,
     textColor: '#ecfeff',
     extendedProps: {
       description: event.description,

@@ -1,5 +1,6 @@
 package com.voicecal.modules.calendar.entity.response;
 
+import com.voicecal.common.enums.dao.EventCategory;
 import com.voicecal.dao.entity.CalendarEvent;
 import java.time.LocalDateTime;
 
@@ -12,6 +13,7 @@ import java.time.LocalDateTime;
  * @param startTime 开始时间
  * @param endTime 结束时间
  * @param location 地点
+ * @param category 日程分类
  * @param reminderMinutes 提前提醒分钟数
  * @param reminderTriggered 提醒是否已触发
  * @param remindedAt 提醒触发时间
@@ -25,6 +27,7 @@ public record CalendarEventResponse(
         LocalDateTime startTime,
         LocalDateTime endTime,
         String location,
+        EventCategory category,
         Integer reminderMinutes,
         Boolean reminderTriggered,
         LocalDateTime remindedAt,
@@ -46,6 +49,7 @@ public record CalendarEventResponse(
                 event.getStartTime(),
                 event.getEndTime(),
                 event.getLocation(),
+                event.getCategory() == null ? EventCategory.OTHER : event.getCategory(),
                 event.getReminderMinutes(),
                 event.getReminderTriggered(),
                 event.getRemindedAt(),

@@ -1,5 +1,6 @@
 package com.voicecal.modules.calendar.controller;
 
+import com.voicecal.common.enums.dao.EventCategory;
 import com.voicecal.common.response.ApiResponse;
 import com.voicecal.modules.calendar.entity.request.CalendarEventCreateRequest;
 import com.voicecal.modules.calendar.entity.request.CalendarEventUpdateRequest;
@@ -63,8 +64,10 @@ public class CalendarEventController {
      * @return 有效日历事件列表
      */
     @GetMapping
-    public ApiResponse<List<CalendarEventResponse>> listEvents() {
-        return ApiResponse.success("查询日历事件列表成功", calendarEventService.listEvents());
+    public ApiResponse<List<CalendarEventResponse>> listEvents(
+            @RequestParam(required = false) EventCategory category
+    ) {
+        return ApiResponse.success("查询日历事件列表成功", calendarEventService.listEvents(category));
     }
 
     /**

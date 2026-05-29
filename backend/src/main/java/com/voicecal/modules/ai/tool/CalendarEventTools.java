@@ -1,6 +1,7 @@
 package com.voicecal.modules.ai.tool;
 
 import com.voicecal.common.enums.ResultCodeEnum;
+import com.voicecal.common.enums.dao.EventCategory;
 import com.voicecal.common.exception.CustomException;
 import com.voicecal.common.exception.ResourceNotFoundException;
 import com.voicecal.modules.assistant.pending.PendingActionResponse;
@@ -84,6 +85,7 @@ public class CalendarEventTools {
      * @param startTime 开始时间，ISO-8601 LocalDateTime 字符串
      * @param endTime 结束时间，ISO-8601 LocalDateTime 字符串
      * @param location 地点
+     * @param category 日程分类，可为空
      * @return 创建结果文本
      */
     @Tool("Create a calendar event.")
@@ -92,7 +94,9 @@ public class CalendarEventTools {
             @P(name = "description", description = "Calendar event description", required = false) String description,
             @P(name = "startTime", description = "Start time in ISO-8601 LocalDateTime format") String startTime,
             @P(name = "endTime", description = "End time in ISO-8601 LocalDateTime format") String endTime,
-            @P(name = "location", description = "Calendar event location", required = false) String location
+            @P(name = "location", description = "Calendar event location", required = false) String location,
+            @P(name = "category", description = "Calendar event category: WORK, STUDY, LIFE, MEETING, INTERVIEW, OTHER", required = false)
+            String category
     ) {
         try {
             CalendarEventResponse event = calendarEventService.createEvent(new CalendarEventCreateRequest(
@@ -101,7 +105,8 @@ public class CalendarEventTools {
                     parseDateTime(startTime),
                     parseDateTime(endTime),
                     normalizeBlank(location),
-                    null
+                    null,
+                    parseCategory(category)
             ));
             return "创建日程成功：" + formatEvent(event);
         } catch (DateTimeParseException exception) {
@@ -233,6 +238,7 @@ public class CalendarEventTools {
                             parseDateTime(startTime),
                             parseDateTime(endTime),
                             normalizeBlank(location),
+                            null,
                             null
                     )
             );
@@ -315,10 +321,22 @@ public class CalendarEventTools {
         if (event.location() != null && !event.location().isBlank()) {
             builder.append(", 地点: ").append(event.location());
         }
+        builder.append(", 分类: ").append(event.category());
         if (event.description() != null && !event.description().isBlank()) {
             builder.append(", 描述: ").append(event.description());
         }
         return builder.toString();
+    }
+
+    private EventCategory parseCategory(String value) {
+        if (value == null || value.isBlank()) {
+            return null;
+        }
+        try {
+            return EventCategory.valueOf(value.trim().toUpperCase());
+        } catch (IllegalArgumentException exception) {
+            throw CustomException.create(ResultCodeEnum.PARAMS_ERROR, "日程分类不正确，请使用 WORK、STUDY、LIFE、MEETING、INTERVIEW 或 OTHER");
+        }
     }
 
     private String formatConflictEvents(List<ConflictEventResponse> events) {

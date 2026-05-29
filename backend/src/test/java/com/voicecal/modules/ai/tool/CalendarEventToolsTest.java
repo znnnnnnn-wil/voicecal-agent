@@ -69,7 +69,8 @@ class CalendarEventToolsTest {
                 "通过 AI 工具创建",
                 "2026-06-01T10:00:00",
                 "2026-06-01T11:00:00",
-                "线上"
+                "线上",
+                null
         );
 
         assertThat(result).contains("创建日程成功", "工具创建会议", "线上");
@@ -84,7 +85,8 @@ class CalendarEventToolsTest {
                 "结束时间不晚于开始时间",
                 "2026-06-01T10:00:00",
                 "2026-06-01T10:00:00",
-                "线上"
+                "线上",
+                null
         );
 
         assertThat(result).isEqualTo("创建日程失败：结束时间必须晚于开始时间");

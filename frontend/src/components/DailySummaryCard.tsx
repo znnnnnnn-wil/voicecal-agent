@@ -1,4 +1,5 @@
-import type { DailySummary } from '../types/ai'
+import { getCategoryBadgeClass, getCategoryLabel } from '../lib/categoryUtils'
+import type { DailySummary, DailySummaryEvent } from '../types/ai'
 
 type DailySummaryCardProps = {
   error: string | null
@@ -15,6 +16,8 @@ function DailySummaryCard({
   onRetry,
   summary,
 }: DailySummaryCardProps) {
+  const categoryStats = Object.entries(summary?.categoryStats ?? {})
+
   return (
     <section className="h-fit self-start rounded-[28px] border border-white/10 bg-white/[0.06] p-5 shadow-2xl shadow-black/25 backdrop-blur-xl">
       <div className="mb-5 flex items-start justify-between gap-4">
@@ -61,6 +64,29 @@ function DailySummaryCard({
             <Metric label="日程数" value={String(summary.eventCount)} />
             <Metric label="已占用" value={`${summary.busyMinutes}m`} />
           </div>
+
+          <div className="grid gap-3 sm:grid-cols-2">
+            <SummaryEvent label="最早安排" event={summary.earliestEvent} />
+            <SummaryEvent label="最晚结束" event={summary.latestEvent} />
+          </div>
+
+          <div className="rounded-2xl border border-white/10 bg-[#0d131a]/70 p-4">
+            <p className="text-xs font-semibold text-slate-400">分类统计</p>
+            {categoryStats.length === 0 ? (
+              <p className="mt-3 text-xs text-slate-500">暂无分类数据</p>
+            ) : (
+              <div className="mt-3 flex flex-wrap gap-2">
+                {categoryStats.map(([category, count]) => (
+                  <span
+                    className={`rounded-full border px-2.5 py-1 text-[11px] ${getCategoryBadgeClass(category)}`}
+                    key={category}
+                  >
+                    {getCategoryLabel(category)} · {count}
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       )}
 
@@ -83,6 +109,31 @@ function Metric({ label, value }: { label: string; value: string }) {
       <p className="mt-1 text-xs text-slate-400">{label}</p>
     </div>
   )
+}
+
+function SummaryEvent({ label, event }: { label: string; event?: DailySummaryEvent | null }) {
+  return (
+    <div className="rounded-2xl border border-white/10 bg-[#0d131a]/70 p-4">
+      <p className="text-xs font-semibold text-slate-400">{label}</p>
+      {event ? (
+        <>
+          <p className="mt-2 break-words text-sm font-semibold text-white">{event.title}</p>
+          <div className="mt-2 flex items-center justify-between gap-2">
+            <span className="text-xs text-slate-500">{formatTime(event.startTime)}</span>
+            <span className={`rounded-full border px-2 py-0.5 text-[11px] ${getCategoryBadgeClass(event.category)}`}>
+              {getCategoryLabel(event.category)}
+            </span>
+          </div>
+        </>
+      ) : (
+        <p className="mt-2 text-xs text-slate-500">暂无</p>
+      )}
+    </div>
+  )
+}
+
+function formatTime(value: string) {
+  return value.slice(11, 16)
 }
 
 export default DailySummaryCard
