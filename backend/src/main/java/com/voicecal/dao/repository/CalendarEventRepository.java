@@ -5,6 +5,7 @@ import com.voicecal.dao.entity.CalendarEvent;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -99,4 +100,28 @@ public interface CalendarEventRepository extends JpaRepository<CalendarEvent, Lo
      * @return 符合条件的日程
      */
     Optional<CalendarEvent> findByIdAndStatus(Long id, EventStatus status);
+
+    /**
+     * 查询尚未触发提醒且未来开始的有效日程候选。
+     *
+     * @param status 日程状态
+     * @param now 当前时间
+     * @return 待判断提醒是否到期的日程候选列表
+     */
+    List<CalendarEvent> findByStatusAndReminderMinutesIsNotNullAndReminderTriggeredFalseAndStartTimeAfterOrderByStartTimeAsc(
+            EventStatus status,
+            LocalDateTime now
+    );
+
+    /**
+     * 查询最近已经触发提醒的日程。
+     *
+     * @param status 日程状态
+     * @param pageable 分页限制
+     * @return 最近已提醒日程列表
+     */
+    List<CalendarEvent> findByStatusAndReminderTriggeredTrueAndRemindedAtIsNotNullOrderByRemindedAtDesc(
+            EventStatus status,
+            Pageable pageable
+    );
 }

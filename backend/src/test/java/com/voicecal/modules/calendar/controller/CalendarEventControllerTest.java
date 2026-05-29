@@ -5,6 +5,7 @@ import com.voicecal.common.enums.dao.EventStatus;
 import com.voicecal.dao.entity.CalendarEvent;
 import com.voicecal.dao.repository.CalendarEventRepository;
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -17,6 +18,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.notNullValue;
+import static org.hamcrest.Matchers.nullValue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -75,6 +77,47 @@ class CalendarEventControllerTest {
         assertThat(savedEvent.getTitle()).isEqualTo("测试会议");
         assertThat(savedEvent.getDescription()).isEqualTo("PR4 测试");
         assertThat(savedEvent.getLocation()).isEqualTo("线上");
+    }
+
+    @Test
+    void createEvent_shouldAcceptReminderMinutes() throws Exception {
+        Map<String, Object> request = new HashMap<>(validRequest(
+                "提醒会议",
+                "包含提醒",
+                "2026-05-29T10:00:00",
+                "2026-05-29T11:00:00",
+                "线上"
+        ));
+        request.put("reminderMinutes", 15);
+
+        mockMvc.perform(post("/api/calendar/events")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.reminderMinutes").value(15))
+                .andExpect(jsonPath("$.data.reminderTriggered").value(false))
+                .andExpect(jsonPath("$.data.remindedAt").value(nullValue()));
+
+        CalendarEvent savedEvent = calendarEventRepository.findAll().get(0);
+        assertThat(savedEvent.getReminderMinutes()).isEqualTo(15);
+        assertThat(savedEvent.getReminderTriggered()).isFalse();
+    }
+
+    @Test
+    void createEvent_shouldRejectNegativeReminderMinutes() throws Exception {
+        Map<String, Object> request = new HashMap<>(validRequest(
+                "无效提醒会议",
+                "提醒时间为负数",
+                "2026-05-29T10:00:00",
+                "2026-05-29T11:00:00",
+                "线上"
+        ));
+        request.put("reminderMinutes", -1);
+
+        mockMvc.perform(post("/api/calendar/events")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest());
     }
 
     @Test

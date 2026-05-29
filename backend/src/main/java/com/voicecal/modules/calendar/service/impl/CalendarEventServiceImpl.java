@@ -45,6 +45,7 @@ public class CalendarEventServiceImpl implements CalendarEventService {
     @Transactional
     public CalendarEventResponse createEvent(CalendarEventCreateRequest request) {
         validateTimeRange(request.startTime(), request.endTime());
+        validateReminderMinutes(request.reminderMinutes());
         ensureNoConflicts(request.startTime(), request.endTime(), null);
 
         CalendarEvent event = new CalendarEvent();
@@ -53,6 +54,8 @@ public class CalendarEventServiceImpl implements CalendarEventService {
         event.setStartTime(request.startTime());
         event.setEndTime(request.endTime());
         event.setLocation(request.location());
+        event.setReminderMinutes(request.reminderMinutes());
+        event.setReminderTriggered(false);
         event.setStatus(EventStatus.ACTIVE);
 
         return CalendarEventResponse.from(calendarEventRepository.save(event));
@@ -95,6 +98,7 @@ public class CalendarEventServiceImpl implements CalendarEventService {
     @Transactional
     public CalendarEventResponse updateEvent(Long id, CalendarEventUpdateRequest request) {
         validateTimeRange(request.startTime(), request.endTime());
+        validateReminderMinutes(request.reminderMinutes());
 
         CalendarEvent event = findActiveEvent(id);
         ensureNoConflicts(request.startTime(), request.endTime(), id);
@@ -103,6 +107,9 @@ public class CalendarEventServiceImpl implements CalendarEventService {
         event.setStartTime(request.startTime());
         event.setEndTime(request.endTime());
         event.setLocation(request.location());
+        event.setReminderMinutes(request.reminderMinutes());
+        event.setReminderTriggered(false);
+        event.setRemindedAt(null);
 
         return CalendarEventResponse.from(event);
     }
@@ -133,6 +140,12 @@ public class CalendarEventServiceImpl implements CalendarEventService {
         }
         if (!endTime.isAfter(startTime)) {
             throw CustomException.create(ResultCodeEnum.PARAMS_ERROR, "结束时间必须晚于开始时间");
+        }
+    }
+
+    private void validateReminderMinutes(Integer reminderMinutes) {
+        if (reminderMinutes != null && reminderMinutes < 0) {
+            throw CustomException.create(ResultCodeEnum.PARAMS_ERROR, "提醒时间不能小于 0");
         }
     }
 

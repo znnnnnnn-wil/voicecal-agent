@@ -100,7 +100,8 @@ public class CalendarEventTools {
                     normalizeBlank(description),
                     parseDateTime(startTime),
                     parseDateTime(endTime),
-                    normalizeBlank(location)
+                    normalizeBlank(location),
+                    null
             ));
             return "创建日程成功：" + formatEvent(event);
         } catch (DateTimeParseException exception) {
@@ -231,7 +232,8 @@ public class CalendarEventTools {
                             normalizeBlank(description),
                             parseDateTime(startTime),
                             parseDateTime(endTime),
-                            normalizeBlank(location)
+                            normalizeBlank(location),
+                            null
                     )
             );
             return "已创建待确认更新操作，请确认后再修改。\n"

@@ -162,7 +162,8 @@ class PendingActionServiceTest {
                 title + "描述",
                 LocalDateTime.of(2026, 6, 1, startHour, 0),
                 LocalDateTime.of(2026, 6, 1, endHour, 0),
-                "会议室 A"
+                "会议室 A",
+                null
         );
     }
 }

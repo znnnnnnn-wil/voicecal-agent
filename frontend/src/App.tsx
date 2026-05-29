@@ -5,6 +5,7 @@ import CalendarView from './components/CalendarView'
 import DailySummaryCard from './components/DailySummaryCard'
 import EventDetailPanel from './components/EventDetailPanel'
 import OperationLog from './components/OperationLog'
+import RecentReminders from './components/RecentReminders'
 import StatusPreview from './components/StatusPreview'
 import TodaySchedule from './components/TodaySchedule'
 import TopNav from './components/TopNav'
@@ -24,9 +25,11 @@ import {
   listCalendarEvents as fetchCalendarEvents,
 } from './services/calendarService'
 import { getRecentLogs as fetchRecentLogs } from './services/logService'
+import { getRecentReminders as fetchRecentReminders } from './services/reminderService'
 import type { DailySummary } from './types/ai'
 import type { CalendarEvent } from './types/calendar'
 import type { VoiceCommandLog } from './types/log'
+import type { Reminder } from './types/reminder'
 
 type FeedbackState = 'idle' | 'loading' | 'success' | 'error'
 
@@ -47,6 +50,7 @@ function App() {
   const [weekError, setWeekError] = useState<string | null>(null)
   const [summaryError, setSummaryError] = useState<string | null>(null)
   const [logsError, setLogsError] = useState<string | null>(null)
+  const [remindersError, setRemindersError] = useState<string | null>(null)
   const [reply, setReply] = useState(initialReply)
   const [replyState, setReplyState] = useState<ReplyState>('idle')
   const [feedback, setFeedback] = useState<FeedbackState>('idle')
@@ -55,12 +59,15 @@ function App() {
   const [isWeekLoading, setIsWeekLoading] = useState(false)
   const [isSummaryLoading, setIsSummaryLoading] = useState(false)
   const [isLogsLoading, setIsLogsLoading] = useState(false)
+  const [isRemindersLoading, setIsRemindersLoading] = useState(false)
   const [isUsingDemoCalendar, setIsUsingDemoCalendar] = useState(false)
   const [isUsingDemoToday, setIsUsingDemoToday] = useState(false)
   const [isUsingDemoWeek, setIsUsingDemoWeek] = useState(false)
   const [isUsingDemoSummary, setIsUsingDemoSummary] = useState(false)
   const [isUsingDemoLogs, setIsUsingDemoLogs] = useState(false)
+  const [isUsingDemoReminders, setIsUsingDemoReminders] = useState(false)
   const [logs, setLogs] = useState<VoiceCommandLog[]>([])
+  const [recentReminders, setRecentReminders] = useState<Reminder[]>([])
 
   const appendLog = useCallback((item: Omit<OperationLogItem, 'time'>) => {
     void item
@@ -121,6 +128,24 @@ function App() {
       setIsUsingDemoLogs(true)
     } finally {
       setIsLogsLoading(false)
+    }
+  }, [])
+
+  const loadRecentReminders = useCallback(async () => {
+    setIsRemindersLoading(true)
+    setRemindersError(null)
+    setIsUsingDemoReminders(false)
+
+    try {
+      const reminders = await fetchRecentReminders(20)
+      setRecentReminders(reminders)
+    } catch (error) {
+      const message = getErrorMessage(error)
+      setRecentReminders(buildDemoReminders())
+      setRemindersError(message)
+      setIsUsingDemoReminders(true)
+    } finally {
+      setIsRemindersLoading(false)
     }
   }, [])
 
@@ -229,7 +254,15 @@ function App() {
     void loadWeekEvents()
     void loadDailySummary()
     void loadVoiceCommandLogs()
-  }, [loadCalendarEvents, loadDailySummary, loadTodayEvents, loadVoiceCommandLogs, loadWeekEvents])
+    void loadRecentReminders()
+  }, [
+    loadCalendarEvents,
+    loadDailySummary,
+    loadRecentReminders,
+    loadTodayEvents,
+    loadVoiceCommandLogs,
+    loadWeekEvents,
+  ])
 
   useEffect(() => {
     if (!selectedEvent) {
@@ -276,6 +309,7 @@ function App() {
         loadWeekEvents(),
         loadDailySummary(),
         loadVoiceCommandLogs(),
+        loadRecentReminders(),
       ])
       appendLog({
         label: 'Calendar data refreshed',
@@ -296,9 +330,14 @@ function App() {
     }
   }
 
-  const dashboardError = calendarError || todayError || weekError || summaryError || logsError
+  const dashboardError = calendarError || todayError || weekError || summaryError || logsError || remindersError
   const isUsingAnyDemoData =
-    isUsingDemoCalendar || isUsingDemoToday || isUsingDemoWeek || isUsingDemoSummary || isUsingDemoLogs
+    isUsingDemoCalendar ||
+    isUsingDemoToday ||
+    isUsingDemoWeek ||
+    isUsingDemoSummary ||
+    isUsingDemoLogs ||
+    isUsingDemoReminders
 
   return (
     <AppShell>
@@ -346,6 +385,13 @@ function App() {
             onRetry={loadDailySummary}
             summary={dailySummary}
           />
+          <RecentReminders
+            error={remindersError}
+            isLoading={isRemindersLoading}
+            isUsingDemoReminders={isUsingDemoReminders}
+            onRetry={loadRecentReminders}
+            reminders={recentReminders}
+          />
           <OperationLog
             error={logsError}
             isLoading={isLogsLoading}
@@ -385,6 +431,20 @@ function buildDemoLogs(): VoiceCommandLog[] {
     success: log.status === 'success' || log.status === 'info',
     createdAt: new Date(Date.now() - index * 60_000).toISOString(),
   }))
+}
+
+function buildDemoReminders(): Reminder[] {
+  return demoTodayEvents
+    .filter((event) => event.reminderMinutes !== null && event.reminderMinutes !== undefined && event.reminderTriggered)
+    .slice(0, 3)
+    .map((event, index) => ({
+      eventId: event.id,
+      title: event.title,
+      startTime: event.startTime,
+      reminderMinutes: event.reminderMinutes ?? 15,
+      reminderTriggered: true,
+      remindedAt: new Date(Date.now() - index * 120_000).toISOString(),
+    }))
 }
 
 export default App
