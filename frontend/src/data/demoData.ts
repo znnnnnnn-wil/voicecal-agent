@@ -1,4 +1,5 @@
 import type { CalendarEvent } from '../types/calendar'
+import type { DailySummary } from '../types/ai'
 
 export type TodayEvent = {
   time: string
@@ -134,6 +135,20 @@ export const demoCalendarEvents: CalendarEvent[] = [
     location: '勿扰模式',
   },
 ]
+
+export const demoTodayEvents = demoCalendarEvents.filter((event) =>
+  event.startTime.startsWith('2026-05-29'),
+)
+
+export const demoDailySummary: DailySummary = {
+  date: '2026-05-29',
+  timezone: 'Asia/Shanghai',
+  eventCount: demoTodayEvents.length,
+  busyMinutes: 225,
+  summary:
+    '今天共有 4 个 demo 日程，已占用约 225 分钟。第一个日程从 09:00 开始，下午适合保留专注时间。',
+  events: demoTodayEvents,
+}
 
 export const calendarDays: CalendarDay[] = [
   {
