@@ -1,5 +1,6 @@
 package com.voicecal.modules.calendar.entity.request;
 
+import com.voicecal.common.enums.dao.EventCategory;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -15,6 +16,7 @@ import java.time.LocalDateTime;
  * @param endTime 结束时间
  * @param location 地点
  * @param reminderMinutes 提前提醒分钟数
+ * @param category 日程分类
  */
 public record CalendarEventCreateRequest(
         @NotBlank(message = "日程标题不能为空")
@@ -34,6 +36,8 @@ public record CalendarEventCreateRequest(
         String location,
 
         @Min(value = 0, message = "提醒时间不能小于 0")
-        Integer reminderMinutes
+        Integer reminderMinutes,
+
+        EventCategory category
 ) {
 }

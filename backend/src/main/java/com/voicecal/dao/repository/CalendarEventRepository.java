@@ -1,6 +1,7 @@
 package com.voicecal.dao.repository;
 
 import com.voicecal.common.enums.dao.EventStatus;
+import com.voicecal.common.enums.dao.EventCategory;
 import com.voicecal.dao.entity.CalendarEvent;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -22,6 +23,15 @@ public interface CalendarEventRepository extends JpaRepository<CalendarEvent, Lo
      * @return 指定状态的日程列表
      */
     List<CalendarEvent> findByStatusOrderByStartTimeAsc(EventStatus status);
+
+    /**
+     * 按状态和分类查询日程，并按开始时间升序返回。
+     *
+     * @param status 日程状态
+     * @param category 日程分类
+     * @return 指定状态和分类的日程列表
+     */
+    List<CalendarEvent> findByStatusAndCategoryOrderByStartTimeAsc(EventStatus status, EventCategory category);
 
     /**
      * 查询与指定时间范围有交集的日程。
