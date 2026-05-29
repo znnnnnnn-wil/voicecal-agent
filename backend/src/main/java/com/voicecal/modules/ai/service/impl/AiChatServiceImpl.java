@@ -4,6 +4,7 @@ import com.voicecal.modules.ai.request.AiChatRequest;
 import com.voicecal.modules.ai.response.AiChatResponse;
 import com.voicecal.modules.ai.service.AiChatService;
 import com.voicecal.modules.ai.service.VoiceCalAssistant;
+import com.voicecal.modules.log.service.VoiceCommandLogService;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Service;
 
@@ -15,11 +16,17 @@ public class AiChatServiceImpl implements AiChatService {
 
     private static final String FALLBACK_REPLY = "AI provider is not configured yet. "
             + "VoiceCal calendar tools are registered and ready for use when a chat model is configured.";
+    private static final String INTENT_CHAT = "CHAT";
 
     private final ObjectProvider<VoiceCalAssistant> voiceCalAssistantProvider;
+    private final VoiceCommandLogService voiceCommandLogService;
 
-    public AiChatServiceImpl(ObjectProvider<VoiceCalAssistant> voiceCalAssistantProvider) {
+    public AiChatServiceImpl(
+            ObjectProvider<VoiceCalAssistant> voiceCalAssistantProvider,
+            VoiceCommandLogService voiceCommandLogService
+    ) {
         this.voiceCalAssistantProvider = voiceCalAssistantProvider;
+        this.voiceCommandLogService = voiceCommandLogService;
     }
 
     /**
@@ -30,10 +37,31 @@ public class AiChatServiceImpl implements AiChatService {
      */
     @Override
     public AiChatResponse chat(AiChatRequest request) {
-        VoiceCalAssistant assistant = voiceCalAssistantProvider.getIfAvailable();
-        if (assistant == null) {
-            return new AiChatResponse(FALLBACK_REPLY);
+        try {
+            VoiceCalAssistant assistant = voiceCalAssistantProvider.getIfAvailable();
+            String reply = assistant == null ? FALLBACK_REPLY : assistant.chat(request.message());
+            saveLogSafely(request, reply, true);
+            return new AiChatResponse(reply);
+        } catch (RuntimeException exception) {
+            saveLogSafely(request, "AI 请求失败：" + exception.getMessage(), false);
+            throw exception;
         }
-        return new AiChatResponse(assistant.chat(request.message()));
+    }
+
+    private void saveLogSafely(AiChatRequest request, String assistantReply, boolean success) {
+        try {
+            voiceCommandLogService.saveLog(
+                    request.conversationId(),
+                    request.message(),
+                    assistantReply,
+                    INTENT_CHAT,
+                    null,
+                    null,
+                    null,
+                    success
+            );
+        } catch (RuntimeException ignored) {
+            // 日志写入失败不能影响 AI 对话主流程。
+        }
     }
 }
