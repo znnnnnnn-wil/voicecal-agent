@@ -1,5 +1,6 @@
 package com.voicecal.modules.calendar.entity.request;
 
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -13,6 +14,7 @@ import java.time.LocalDateTime;
  * @param startTime 开始时间
  * @param endTime 结束时间
  * @param location 地点
+ * @param reminderMinutes 提前提醒分钟数
  */
 public record CalendarEventCreateRequest(
         @NotBlank(message = "日程标题不能为空")
@@ -29,6 +31,9 @@ public record CalendarEventCreateRequest(
         LocalDateTime endTime,
 
         @Size(max = 255, message = "地点不能超过 255 个字符")
-        String location
+        String location,
+
+        @Min(value = 0, message = "提醒时间不能小于 0")
+        Integer reminderMinutes
 ) {
 }
