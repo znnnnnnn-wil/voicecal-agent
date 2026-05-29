@@ -23,8 +23,10 @@ import {
   getWeekEvents as fetchWeekEvents,
   listCalendarEvents as fetchCalendarEvents,
 } from './services/calendarService'
+import { getRecentLogs as fetchRecentLogs } from './services/logService'
 import type { DailySummary } from './types/ai'
 import type { CalendarEvent } from './types/calendar'
+import type { VoiceCommandLog } from './types/log'
 
 type FeedbackState = 'idle' | 'loading' | 'success' | 'error'
 
@@ -44,6 +46,7 @@ function App() {
   const [todayError, setTodayError] = useState<string | null>(null)
   const [weekError, setWeekError] = useState<string | null>(null)
   const [summaryError, setSummaryError] = useState<string | null>(null)
+  const [logsError, setLogsError] = useState<string | null>(null)
   const [reply, setReply] = useState(initialReply)
   const [replyState, setReplyState] = useState<ReplyState>('idle')
   const [feedback, setFeedback] = useState<FeedbackState>('idle')
@@ -51,14 +54,16 @@ function App() {
   const [isTodayLoading, setIsTodayLoading] = useState(false)
   const [isWeekLoading, setIsWeekLoading] = useState(false)
   const [isSummaryLoading, setIsSummaryLoading] = useState(false)
+  const [isLogsLoading, setIsLogsLoading] = useState(false)
   const [isUsingDemoCalendar, setIsUsingDemoCalendar] = useState(false)
   const [isUsingDemoToday, setIsUsingDemoToday] = useState(false)
   const [isUsingDemoWeek, setIsUsingDemoWeek] = useState(false)
   const [isUsingDemoSummary, setIsUsingDemoSummary] = useState(false)
-  const [logs, setLogs] = useState<OperationLogItem[]>(operationLogs)
+  const [isUsingDemoLogs, setIsUsingDemoLogs] = useState(false)
+  const [logs, setLogs] = useState<VoiceCommandLog[]>([])
 
   const appendLog = useCallback((item: Omit<OperationLogItem, 'time'>) => {
-    setLogs((currentLogs) => [{ time: '刚刚', ...item }, ...currentLogs].slice(0, 6))
+    void item
   }, [])
 
   const appendAssistantLog = useCallback(
@@ -100,6 +105,24 @@ function App() {
       setIsCalendarLoading(false)
     }
   }, [appendLog])
+
+  const loadVoiceCommandLogs = useCallback(async () => {
+    setIsLogsLoading(true)
+    setLogsError(null)
+    setIsUsingDemoLogs(false)
+
+    try {
+      const recentLogs = await fetchRecentLogs(20)
+      setLogs(recentLogs)
+    } catch (error) {
+      const message = getErrorMessage(error)
+      setLogs(buildDemoLogs())
+      setLogsError(message)
+      setIsUsingDemoLogs(true)
+    } finally {
+      setIsLogsLoading(false)
+    }
+  }, [])
 
   const loadTodayEvents = useCallback(async () => {
     setIsTodayLoading(true)
@@ -205,7 +228,8 @@ function App() {
     void loadTodayEvents()
     void loadWeekEvents()
     void loadDailySummary()
-  }, [loadCalendarEvents, loadDailySummary, loadTodayEvents, loadWeekEvents])
+    void loadVoiceCommandLogs()
+  }, [loadCalendarEvents, loadDailySummary, loadTodayEvents, loadVoiceCommandLogs, loadWeekEvents])
 
   useEffect(() => {
     if (!selectedEvent) {
@@ -246,7 +270,13 @@ function App() {
         detail: '后端 AI 对话接口已返回 reply',
         status: 'success',
       })
-      await Promise.all([loadCalendarEvents(), loadTodayEvents(), loadWeekEvents(), loadDailySummary()])
+      await Promise.all([
+        loadCalendarEvents(),
+        loadTodayEvents(),
+        loadWeekEvents(),
+        loadDailySummary(),
+        loadVoiceCommandLogs(),
+      ])
       appendLog({
         label: 'Calendar data refreshed',
         detail: 'AI 对话完成后已刷新日历、今日、本周和每日摘要',
@@ -266,9 +296,9 @@ function App() {
     }
   }
 
-  const dashboardError = calendarError || todayError || weekError || summaryError
+  const dashboardError = calendarError || todayError || weekError || summaryError || logsError
   const isUsingAnyDemoData =
-    isUsingDemoCalendar || isUsingDemoToday || isUsingDemoWeek || isUsingDemoSummary
+    isUsingDemoCalendar || isUsingDemoToday || isUsingDemoWeek || isUsingDemoSummary || isUsingDemoLogs
 
   return (
     <AppShell>
@@ -316,7 +346,13 @@ function App() {
             onRetry={loadDailySummary}
             summary={dailySummary}
           />
-          <OperationLog logs={logs} />
+          <OperationLog
+            error={logsError}
+            isLoading={isLogsLoading}
+            isUsingDemoLogs={isUsingDemoLogs}
+            logs={logs}
+            onRetry={loadVoiceCommandLogs}
+          />
           <StatusPreview
             chatError={chatError}
             eventsError={dashboardError}
@@ -334,6 +370,21 @@ function getErrorMessage(error: unknown) {
     return error.message
   }
   return '请求失败，请稍后重试。'
+}
+
+function buildDemoLogs(): VoiceCommandLog[] {
+  return operationLogs.map((log, index) => ({
+    id: -(index + 1),
+    conversationId: 'demo',
+    rawText: log.label,
+    assistantReply: log.detail,
+    intent: 'DEMO',
+    toolName: null,
+    toolArgsJson: null,
+    toolResultJson: null,
+    success: log.status === 'success' || log.status === 'info',
+    createdAt: new Date(Date.now() - index * 60_000).toISOString(),
+  }))
 }
 
 export default App
