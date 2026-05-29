@@ -1,3 +1,5 @@
+import { useState } from 'react'
+import { downloadEventIcs } from '../services/icsService'
 import type { CalendarEvent } from '../types/calendar'
 
 type EventDetailPanelProps = {
@@ -13,6 +15,25 @@ const dateTimeFormatter = new Intl.DateTimeFormat('zh-CN', {
 })
 
 function EventDetailPanel({ event, onClose }: EventDetailPanelProps) {
+  const [isExporting, setIsExporting] = useState(false)
+  const [exportError, setExportError] = useState<string | null>(null)
+
+  const handleExportIcs = async () => {
+    if (!event) {
+      return
+    }
+
+    setIsExporting(true)
+    setExportError(null)
+    try {
+      await downloadEventIcs(event.id)
+    } catch (error) {
+      setExportError(getErrorMessage(error))
+    } finally {
+      setIsExporting(false)
+    }
+  }
+
   return (
     <section className="h-fit self-start rounded-[28px] border border-white/10 bg-white/[0.06] p-5 shadow-2xl shadow-black/25 backdrop-blur-xl">
       <div className="flex items-start justify-between gap-4">
@@ -49,6 +70,19 @@ function EventDetailPanel({ event, onClose }: EventDetailPanelProps) {
               </div>
               <ReminderBadge event={event} />
             </div>
+            <button
+              className="mt-4 w-full rounded-full border border-cyan-200/25 bg-cyan-200/10 px-4 py-2 text-xs font-semibold text-cyan-50 transition hover:bg-cyan-200/15 disabled:cursor-not-allowed disabled:opacity-60"
+              disabled={isExporting}
+              onClick={handleExportIcs}
+              type="button"
+            >
+              {isExporting ? 'Exporting...' : '导出 ICS'}
+            </button>
+            {exportError && (
+              <p className="mt-3 rounded-2xl border border-rose-300/20 bg-rose-300/10 p-3 text-xs leading-5 text-rose-50">
+                {exportError}
+              </p>
+            )}
           </div>
 
           <DetailRow label="开始时间" value={formatDateTime(event.startTime)} />
@@ -111,6 +145,13 @@ function formatReminder(event: CalendarEvent) {
 
 function formatDateTime(value: string) {
   return dateTimeFormatter.format(new Date(value))
+}
+
+function getErrorMessage(error: unknown) {
+  if (error instanceof Error) {
+    return error.message
+  }
+  return '导出 ICS 失败，请稍后重试。'
 }
 
 export default EventDetailPanel
