@@ -10,11 +10,11 @@ function WeekSummary({ events, isLoading, isUsingDemoEvents }: WeekSummaryProps)
   const weekStats = buildWeekStats(events)
 
   return (
-    <section className="rounded-[28px] border border-white/10 bg-white/[0.06] p-5 shadow-2xl shadow-black/25 backdrop-blur-xl">
+    <section className="h-fit self-start rounded-[28px] border border-white/10 bg-white/[0.06] p-5 shadow-2xl shadow-black/25 backdrop-blur-xl">
       <div className="mb-5">
         <p className="text-sm font-semibold text-white">本周摘要</p>
         <p className="mt-1 text-xs text-slate-400">
-          {isUsingDemoEvents ? '基于 demo fallback 数据' : '基于已加载后端日程'}
+          {isUsingDemoEvents ? '基于 demo fallback 数据' : '基于本周日程接口'}
         </p>
       </div>
 
