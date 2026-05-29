@@ -1,71 +1,81 @@
-import AiInputPreview from './components/AiInputPreview'
+import { useEffect, useRef, useState } from 'react'
+import AiCommandPanel from './components/AiCommandPanel'
+import AiReplyPanel, { type ReplyState } from './components/AiReplyPanel'
 import AppShell from './components/AppShell'
-import CalendarPreview from './components/CalendarPreview'
-import HeroPanel from './components/HeroPanel'
-import StatusCard from './components/StatusCard'
+import CalendarBoard from './components/CalendarBoard'
+import OperationLog from './components/OperationLog'
+import StatusPreview from './components/StatusPreview'
+import TodaySchedule from './components/TodaySchedule'
+import TopNav from './components/TopNav'
+import VoiceInputCard from './components/VoiceInputCard'
+import WeekSummary from './components/WeekSummary'
 
-const capabilities = [
-  {
-    title: '自然语言安排日程',
-    description: '把日常表达转换成清晰的日程草稿，减少来回确认。',
-    accent: 'from-emerald-300 to-cyan-300',
-  },
-  {
-    title: '日历事件管理',
-    description: '在一个专注的工作区里查看安排、准备会议和管理事件。',
-    accent: 'from-violet-300 to-fuchsia-300',
-  },
-  {
-    title: '后端工具调用就绪',
-    description: '已为 LangChain4j 工具调用打好基础，后续可接入真实模型。',
-    accent: 'from-amber-200 to-rose-300',
-  },
-]
+type FeedbackState = 'idle' | 'loading' | 'success' | 'error'
+
+const initialReply =
+  '我可以帮助你创建、检查和整理日历事件。试着让我安排一次会议，或者帮你梳理今天的日程。'
 
 function App() {
+  const [command, setCommand] = useState('帮我安排明天上午 10 点的设计评审会')
+  const [reply, setReply] = useState(initialReply)
+  const [replyState, setReplyState] = useState<ReplyState>('idle')
+  const [feedback, setFeedback] = useState<FeedbackState>('idle')
+  const timeoutRef = useRef<number | null>(null)
+
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current !== null) {
+        window.clearTimeout(timeoutRef.current)
+      }
+    }
+  }, [])
+
+  const handleRunCommand = () => {
+    if (timeoutRef.current !== null) {
+      window.clearTimeout(timeoutRef.current)
+    }
+
+    if (!command.trim()) {
+      setReplyState('error')
+      setFeedback('error')
+      setReply('我还没有收到有效指令。请先输入会议主题、时间或想要整理的日程内容。')
+      return
+    }
+
+    setReplyState('loading')
+    setFeedback('loading')
+
+    timeoutRef.current = window.setTimeout(() => {
+      setReplyState('success')
+      setFeedback('success')
+      setReply('我找到了可用时间段，并准备了一份日程草稿。后续 PR 会把这里连接到真实后端执行。')
+    }, 500)
+  }
+
   return (
     <AppShell>
-      <main className="mx-auto flex w-full max-w-7xl flex-col gap-10 px-5 py-6 sm:px-8 lg:px-10">
-        <nav className="flex items-center justify-between rounded-full border border-white/10 bg-white/[0.06] px-4 py-3 shadow-2xl shadow-black/20 backdrop-blur-xl">
-          <div className="flex items-center gap-3">
-            <div className="grid size-10 place-items-center rounded-2xl bg-gradient-to-br from-emerald-300 via-cyan-300 to-violet-300 text-sm font-black text-slate-950 shadow-lg shadow-cyan-500/20">
-              VC
-            </div>
-            <div>
-              <p className="text-sm font-semibold text-white">VoiceCal Agent</p>
-              <p className="text-xs text-slate-400">AI 日程助手</p>
-            </div>
+      <TopNav />
+      <main className="mx-auto grid w-full max-w-7xl gap-5 px-5 py-6 sm:px-8 lg:grid-cols-12 lg:px-10">
+        <section className="grid gap-5 lg:col-span-8">
+          <AiCommandPanel
+            command={command}
+            isLoading={replyState === 'loading'}
+            onCommandChange={setCommand}
+            onRunCommand={handleRunCommand}
+          />
+          <div className="grid gap-5 xl:grid-cols-[0.95fr_1.05fr]">
+            <VoiceInputCard />
+            <AiReplyPanel reply={reply} state={replyState} />
           </div>
-          <div className="rounded-full border border-emerald-300/20 bg-emerald-300/10 px-3 py-1 text-xs font-medium text-emerald-100">
-            本地演示
-          </div>
-        </nav>
-
-        <section className="grid items-center gap-8 lg:grid-cols-[1.05fr_0.95fr]">
-          <HeroPanel />
-          <div className="grid gap-4">
-            <AiInputPreview />
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
-              <CalendarPreview />
-              <StatusCard />
-            </div>
-          </div>
+          <CalendarBoard />
         </section>
 
-        <section className="grid gap-4 pb-8 md:grid-cols-3">
-          {capabilities.map((capability) => (
-            <article
-              className="group rounded-[28px] border border-white/10 bg-white/[0.06] p-6 shadow-2xl shadow-black/20 backdrop-blur-xl transition duration-300 hover:-translate-y-1 hover:border-white/20 hover:bg-white/[0.09]"
-              key={capability.title}
-            >
-              <div
-                className={`mb-6 h-1.5 w-16 rounded-full bg-gradient-to-r ${capability.accent}`}
-              />
-              <h2 className="text-lg font-semibold text-white">{capability.title}</h2>
-              <p className="mt-3 text-sm leading-6 text-slate-400">{capability.description}</p>
-            </article>
-          ))}
-        </section>
+        <aside className="grid gap-5 lg:col-span-4">
+          <TodaySchedule />
+          <WeekSummary />
+          <OperationLog />
+          <StatusPreview feedback={feedback} />
+        </aside>
       </main>
     </AppShell>
   )
