@@ -45,6 +45,31 @@ public interface CalendarEventRepository extends JpaRepository<CalendarEvent, Lo
     );
 
     /**
+     * 查询与指定时间范围有交集的日程，并可排除指定日程 ID。
+     *
+     * @param rangeStart 查询范围开始时间
+     * @param rangeEnd 查询范围结束时间
+     * @param excludeEventId 需要排除的日程 ID，可为空
+     * @param status 日程状态
+     * @return 与时间范围有交集的日程列表
+     */
+    @Query("""
+            select event
+            from CalendarEvent event
+            where event.status = :status
+              and event.startTime < :rangeEnd
+              and event.endTime > :rangeStart
+              and (:excludeEventId is null or event.id <> :excludeEventId)
+            order by event.startTime asc
+            """)
+    List<CalendarEvent> findOverlappingEventsExcludingEvent(
+            @Param("rangeStart") LocalDateTime rangeStart,
+            @Param("rangeEnd") LocalDateTime rangeEnd,
+            @Param("excludeEventId") Long excludeEventId,
+            @Param("status") EventStatus status
+    );
+
+    /**
      * 按关键词查询标题或描述匹配的日程。
      *
      * @param keyword 关键词

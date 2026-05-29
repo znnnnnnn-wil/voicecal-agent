@@ -1,6 +1,8 @@
 package com.voicecal.modules.calendar.service.impl;
 
+import com.voicecal.common.enums.ResultCodeEnum;
 import com.voicecal.common.enums.dao.EventStatus;
+import com.voicecal.common.exception.CustomException;
 import com.voicecal.dao.entity.CalendarEvent;
 import com.voicecal.dao.repository.CalendarEventRepository;
 import com.voicecal.modules.calendar.entity.response.CalendarEventResponse;
@@ -103,7 +105,7 @@ public class CalendarEventQueryServiceImpl implements CalendarEventQueryService 
         try {
             return ZoneId.of(timezone);
         } catch (DateTimeException exception) {
-            throw new IllegalArgumentException("timezone 参数不是有效的 IANA timezone");
+            throw CustomException.create(ResultCodeEnum.PARAMS_ERROR, "timezone 参数不是有效的 IANA timezone");
         }
     }
 
@@ -122,7 +124,7 @@ public class CalendarEventQueryServiceImpl implements CalendarEventQueryService 
         try {
             return LocalDate.parse(date);
         } catch (DateTimeParseException exception) {
-            throw new IllegalArgumentException("date 参数格式必须为 yyyy-MM-dd");
+            throw CustomException.create(ResultCodeEnum.PARAMS_ERROR, "date 参数格式必须为 yyyy-MM-dd");
         }
     }
 
