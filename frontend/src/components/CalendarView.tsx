@@ -111,14 +111,16 @@ function toCalendarEvent(event: CalendarEvent): EventInput {
     title: event.title,
     start: event.startTime,
     end: event.endTime,
-    backgroundColor: '#0891b2',
-    borderColor: '#67e8f9',
+    backgroundColor: event.reminderTriggered ? '#059669' : '#0891b2',
+    borderColor: event.reminderTriggered ? '#6ee7b7' : '#67e8f9',
     textColor: '#ecfeff',
     extendedProps: {
       description: event.description,
       location: event.location,
       category: event.category,
       reminderMinutes: event.reminderMinutes,
+      reminderTriggered: event.reminderTriggered,
+      remindedAt: event.remindedAt,
       rawEvent: event,
     },
   }

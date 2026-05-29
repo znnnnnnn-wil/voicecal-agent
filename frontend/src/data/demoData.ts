@@ -60,6 +60,9 @@ export const demoCalendarEvents: CalendarEvent[] = [
     startTime: '2026-05-29T09:00:00',
     endTime: '2026-05-29T09:30:00',
     location: '线上会议',
+    reminderMinutes: 10,
+    reminderTriggered: true,
+    remindedAt: '2026-05-29T08:50:00',
   },
   {
     id: 9002,
@@ -68,6 +71,9 @@ export const demoCalendarEvents: CalendarEvent[] = [
     startTime: '2026-05-29T11:30:00',
     endTime: '2026-05-29T12:30:00',
     location: '会议室 A',
+    reminderMinutes: 15,
+    reminderTriggered: false,
+    remindedAt: null,
   },
   {
     id: 9003,
@@ -76,6 +82,9 @@ export const demoCalendarEvents: CalendarEvent[] = [
     startTime: '2026-05-29T14:00:00',
     endTime: '2026-05-29T14:45:00',
     location: '销售线索',
+    reminderMinutes: null,
+    reminderTriggered: false,
+    remindedAt: null,
   },
   {
     id: 9004,
