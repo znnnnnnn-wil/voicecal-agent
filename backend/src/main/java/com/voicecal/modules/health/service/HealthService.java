@@ -1,6 +1,6 @@
 package com.voicecal.modules.health.service;
 
-import com.voicecal.modules.health.response.HealthResponse;
+import com.voicecal.modules.health.entity.response.HealthResponse;
 
 /**
  * 健康检查服务，定义服务运行状态查询能力。
