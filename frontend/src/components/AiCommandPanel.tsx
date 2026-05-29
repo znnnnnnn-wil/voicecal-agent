@@ -1,13 +1,17 @@
 type AiCommandPanelProps = {
   command: string
+  error: string | null
   isLoading: boolean
+  isSuccess: boolean
   onCommandChange: (value: string) => void
   onRunCommand: () => void
 }
 
 function AiCommandPanel({
   command,
+  error,
   isLoading,
+  isSuccess,
   onCommandChange,
   onRunCommand,
 }: AiCommandPanelProps) {
@@ -20,11 +24,11 @@ function AiCommandPanel({
             用一句话规划今天的日程
           </h1>
           <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-400">
-            使用自然语言安排会议、整理日程和准备待办。这里是前端演示，不会调用后端。
+            使用自然语言安排会议、整理日程和准备待办。指令会发送到后端 AI 对话接口。
           </p>
         </div>
         <span className="w-fit rounded-full border border-cyan-300/20 bg-cyan-300/10 px-3 py-1 text-xs font-medium text-cyan-100">
-          演示界面
+          已连接后端
         </span>
       </div>
 
@@ -43,7 +47,7 @@ function AiCommandPanel({
               onClick={onRunCommand}
               type="button"
             >
-              {isLoading ? '运行中...' : '运行指令'}
+              {isLoading ? '思考中...' : '运行指令'}
             </button>
             <button
               className="rounded-full border border-white/15 bg-white/[0.06] px-5 py-3 text-sm font-semibold text-white transition hover:border-white/25 hover:bg-white/[0.1] focus:outline-none focus:ring-2 focus:ring-white/30 focus:ring-offset-2 focus:ring-offset-[#0d131a]"
@@ -54,6 +58,28 @@ function AiCommandPanel({
           </div>
           <p className="text-xs text-amber-100">即将上线</p>
         </div>
+
+        {error && (
+          <div className="mt-4 rounded-2xl border border-rose-300/20 bg-rose-300/10 p-4">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <p className="text-sm leading-6 text-rose-50">{error}</p>
+              <button
+                className="w-fit rounded-full border border-rose-200/30 bg-rose-200/10 px-3 py-1.5 text-xs font-semibold text-rose-50 transition hover:bg-rose-200/15"
+                disabled={isLoading}
+                onClick={onRunCommand}
+                type="button"
+              >
+                重试
+              </button>
+            </div>
+          </div>
+        )}
+
+        {isSuccess && !error && (
+          <div className="mt-4 rounded-2xl border border-emerald-300/20 bg-emerald-300/10 p-4 text-sm text-emerald-50">
+            后端已返回 AI 回复。
+          </div>
+        )}
       </div>
     </section>
   )

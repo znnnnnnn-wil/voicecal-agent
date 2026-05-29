@@ -2,7 +2,7 @@ const bars = ['h-4', 'h-8', 'h-12', 'h-7', 'h-10', 'h-5', 'h-9', 'h-6']
 
 function VoiceInputCard() {
   return (
-    <section className="rounded-[28px] border border-white/10 bg-white/[0.06] p-5 shadow-2xl shadow-black/25 backdrop-blur-xl">
+    <section className="h-fit self-start rounded-[28px] border border-white/10 bg-white/[0.06] p-5 shadow-2xl shadow-black/25 backdrop-blur-xl">
       <div className="flex items-center justify-between gap-4">
         <div>
           <p className="text-sm font-semibold text-white">语音输入</p>

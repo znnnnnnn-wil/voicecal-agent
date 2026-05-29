@@ -1,4 +1,4 @@
-import { todayEvents } from '../data/demoData'
+import type { CalendarEvent } from '../types/calendar'
 
 const statusClass = {
   confirmed: 'bg-emerald-300/10 text-emerald-100 border-emerald-300/20',
@@ -12,38 +12,114 @@ const statusText = {
   focus: '专注',
 }
 
-function TodaySchedule() {
+type TodayScheduleProps = {
+  events: CalendarEvent[]
+  error: string | null
+  isLoading: boolean
+  isUsingDemoEvents: boolean
+  onRetry: () => void
+}
+
+function TodaySchedule({
+  events,
+  error,
+  isLoading,
+  isUsingDemoEvents,
+  onRetry,
+}: TodayScheduleProps) {
+  const todayEvents = getTodayEvents(events)
+
   return (
     <section className="rounded-[28px] border border-white/10 bg-white/[0.06] p-5 shadow-2xl shadow-black/25 backdrop-blur-xl">
       <div className="mb-5 flex items-center justify-between">
         <div>
           <p className="text-sm font-semibold text-white">今日日程</p>
-          <p className="mt-1 text-xs text-slate-400">4 个待处理安排</p>
+          <p className="mt-1 text-xs text-slate-400">
+            {isUsingDemoEvents ? 'Demo fallback data' : `${todayEvents.length} 个已加载安排`}
+          </p>
         </div>
         <span className="rounded-full bg-white/[0.08] px-3 py-1 text-xs text-slate-300">今天</span>
       </div>
 
+      {error && (
+        <div className="mb-3 rounded-2xl border border-amber-200/20 bg-amber-200/10 p-3">
+          <p className="text-xs leading-5 text-amber-50">
+            Showing demo data because the backend is unavailable.
+          </p>
+          <button
+            className="mt-2 text-xs font-semibold text-amber-100 underline underline-offset-4"
+            onClick={onRetry}
+            type="button"
+          >
+            重试加载
+          </button>
+        </div>
+      )}
+
+      {isLoading && (
+        <div className="space-y-3">
+          {Array.from({ length: 4 }).map((_, index) => (
+            <div className="h-20 animate-pulse rounded-2xl bg-white/10" key={index} />
+          ))}
+        </div>
+      )}
+
+      {!isLoading && todayEvents.length === 0 && (
+        <div className="rounded-2xl border border-dashed border-white/15 bg-[#0d131a]/70 p-5">
+          <p className="text-sm font-semibold text-white">今天暂无日程</p>
+          <p className="mt-2 text-xs leading-5 text-slate-400">
+            后端当前没有返回今天的事件。你可以通过后端 API 创建日程，或让 VoiceCal 先准备草稿。
+          </p>
+        </div>
+      )}
+
+      {!isLoading && todayEvents.length > 0 && (
       <div className="space-y-3">
         {todayEvents.map((event) => (
           <div
             className="rounded-2xl border border-white/10 bg-[#0d131a]/70 p-4"
-            key={`${event.time}-${event.title}`}
+            key={event.id}
           >
             <div className="flex items-start justify-between gap-3">
               <div>
-                <p className="text-xs font-medium text-slate-400">{event.time}</p>
+                <p className="text-xs font-medium text-slate-400">{formatTime(event.startTime)}</p>
                 <p className="mt-1 text-sm font-semibold text-white">{event.title}</p>
-                <p className="mt-1 text-xs text-slate-500">{event.meta}</p>
+                <p className="mt-1 text-xs text-slate-500">{event.location || '未设置地点'}</p>
               </div>
-              <span className={`rounded-full border px-2.5 py-1 text-[11px] ${statusClass[event.status]}`}>
-                {statusText[event.status]}
+              <span className={`rounded-full border px-2.5 py-1 text-[11px] ${statusClass[getEventStatus(event)]}`}>
+                {statusText[getEventStatus(event)]}
               </span>
             </div>
           </div>
         ))}
       </div>
+      )}
     </section>
   )
+}
+
+function getTodayEvents(events: CalendarEvent[]) {
+  const todayKey = new Date().toISOString().slice(0, 10)
+  const todayEvents = events.filter((event) => event.startTime.startsWith(todayKey))
+  if (todayEvents.length > 0) {
+    return [...todayEvents].sort((left, right) => left.startTime.localeCompare(right.startTime))
+  }
+  return []
+}
+
+function getEventStatus(event: CalendarEvent): keyof typeof statusText {
+  const title = event.title.toLowerCase()
+  if (title.includes('focus') || title.includes('专注')) {
+    return 'focus'
+  }
+  if (event.description?.toLowerCase().includes('draft')) {
+    return 'draft'
+  }
+  return 'confirmed'
+}
+
+function formatTime(value: string) {
+  return value.slice(11, 16)
 }
 
 export default TodaySchedule

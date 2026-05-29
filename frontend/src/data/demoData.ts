@@ -1,3 +1,5 @@
+import type { CalendarEvent } from '../types/calendar'
+
 export type TodayEvent = {
   time: string
   title: string
@@ -46,6 +48,90 @@ export const todayEvents: TodayEvent[] = [
     title: '专注时间',
     meta: '勿扰模式',
     status: 'focus',
+  },
+]
+
+export const demoCalendarEvents: CalendarEvent[] = [
+  {
+    id: 9001,
+    title: '产品晨会',
+    description: 'Demo fallback event',
+    startTime: '2026-05-29T09:00:00',
+    endTime: '2026-05-29T09:30:00',
+    location: '线上会议',
+  },
+  {
+    id: 9002,
+    title: '设计评审',
+    description: 'Demo fallback event',
+    startTime: '2026-05-29T11:30:00',
+    endTime: '2026-05-29T12:30:00',
+    location: '会议室 A',
+  },
+  {
+    id: 9003,
+    title: '客户跟进',
+    description: 'Demo fallback event',
+    startTime: '2026-05-29T14:00:00',
+    endTime: '2026-05-29T14:45:00',
+    location: '销售线索',
+  },
+  {
+    id: 9004,
+    title: '专注时间',
+    description: 'Demo fallback event',
+    startTime: '2026-05-29T16:00:00',
+    endTime: '2026-05-29T17:30:00',
+    location: '勿扰模式',
+  },
+  {
+    id: 9005,
+    title: '周计划',
+    startTime: '2026-05-25T09:00:00',
+    endTime: '2026-05-25T10:00:00',
+    location: '远程',
+  },
+  {
+    id: 9006,
+    title: '研发同步',
+    startTime: '2026-05-25T15:00:00',
+    endTime: '2026-05-25T16:00:00',
+    location: '会议室 B',
+  },
+  {
+    id: 9007,
+    title: '用户访谈',
+    startTime: '2026-05-26T10:30:00',
+    endTime: '2026-05-26T11:30:00',
+    location: '线上',
+  },
+  {
+    id: 9008,
+    title: '方案整理',
+    startTime: '2026-05-26T14:00:00',
+    endTime: '2026-05-26T15:00:00',
+    location: '办公室',
+  },
+  {
+    id: 9009,
+    title: '路线评审',
+    startTime: '2026-05-27T11:00:00',
+    endTime: '2026-05-27T12:00:00',
+    location: '会议室 C',
+  },
+  {
+    id: 9010,
+    title: '版本规划',
+    startTime: '2026-05-28T09:30:00',
+    endTime: '2026-05-28T10:30:00',
+    location: '线上',
+  },
+  {
+    id: 9011,
+    title: '专注块',
+    startTime: '2026-05-28T16:00:00',
+    endTime: '2026-05-28T17:00:00',
+    location: '勿扰模式',
   },
 ]
 
