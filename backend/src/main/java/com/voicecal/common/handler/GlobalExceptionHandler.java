@@ -1,6 +1,7 @@
 package com.voicecal.common.handler;
 
 import com.voicecal.common.response.ApiResponse;
+import com.voicecal.common.exception.ResourceNotFoundException;
 import jakarta.validation.ConstraintViolationException;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -68,6 +69,18 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiResponse<String>> handleIllegalArgument(IllegalArgumentException exception) {
         return ResponseEntity.badRequest()
                 .body(ApiResponse.fail("BAD_REQUEST", exception.getMessage()));
+    }
+
+    /**
+     * 处理资源不存在异常。
+     *
+     * @param exception 资源不存在异常
+     * @return 包含资源不存在提示的统一响应
+     */
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ResponseEntity<ApiResponse<String>> handleResourceNotFound(ResourceNotFoundException exception) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(ApiResponse.fail("NOT_FOUND", exception.getMessage()));
     }
 
     /**
