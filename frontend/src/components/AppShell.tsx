@@ -2,9 +2,10 @@ import type { PropsWithChildren } from 'react'
 
 function AppShell({ children }: PropsWithChildren) {
   return (
-    <div className="relative min-h-screen overflow-x-hidden bg-[#090d12] text-slate-100">
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_8%,rgba(45,212,191,0.28),transparent_28%),radial-gradient(circle_at_84%_14%,rgba(168,85,247,0.24),transparent_30%),radial-gradient(circle_at_50%_92%,rgba(251,191,36,0.12),transparent_28%)]" />
-      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.045)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.045)_1px,transparent_1px)] bg-[size:72px_72px] opacity-30 [mask-image:linear-gradient(to_bottom,black,transparent_82%)]" />
+    <div className="relative min-h-screen overflow-x-hidden bg-[#070b10] text-slate-100">
+      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(135deg,rgba(14,165,233,0.18),transparent_32%),linear-gradient(225deg,rgba(16,185,129,0.14),transparent_30%),linear-gradient(to_bottom,#0b1018_0%,#070b10_45%,#090d12_100%)]" />
+      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.04)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.04)_1px,transparent_1px)] bg-[size:72px_72px] opacity-35 [mask-image:linear-gradient(to_bottom,black,transparent_86%)]" />
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-cyan-300/10 to-transparent" />
       <div className="relative z-10">{children}</div>
     </div>
   )
