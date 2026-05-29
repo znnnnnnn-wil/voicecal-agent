@@ -1,6 +1,7 @@
 package com.voicecal.modules.calendar.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.voicecal.common.enums.dao.EventCategory;
 import com.voicecal.common.enums.dao.EventStatus;
 import com.voicecal.dao.entity.CalendarEvent;
 import com.voicecal.dao.repository.CalendarEventRepository;
@@ -101,6 +102,78 @@ class CalendarEventControllerTest {
         CalendarEvent savedEvent = calendarEventRepository.findAll().get(0);
         assertThat(savedEvent.getReminderMinutes()).isEqualTo(15);
         assertThat(savedEvent.getReminderTriggered()).isFalse();
+    }
+
+    @Test
+    void createEvent_shouldUseProvidedCategory() throws Exception {
+        Map<String, Object> request = new HashMap<>(validRequest(
+                "团队周会",
+                "指定分类",
+                "2026-05-29T10:00:00",
+                "2026-05-29T11:00:00",
+                "线上"
+        ));
+        request.put("category", "MEETING");
+
+        mockMvc.perform(post("/api/calendar/events")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.category").value("MEETING"));
+
+        CalendarEvent savedEvent = calendarEventRepository.findAll().get(0);
+        assertThat(savedEvent.getCategory()).isEqualTo(EventCategory.MEETING);
+    }
+
+    @Test
+    void createEvent_shouldInferCategory_whenCategoryMissing() throws Exception {
+        Map<String, Object> request = validRequest(
+                "产品评审会议",
+                "自动推断分类",
+                "2026-05-29T10:00:00",
+                "2026-05-29T11:00:00",
+                "线上"
+        );
+
+        mockMvc.perform(post("/api/calendar/events")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.category").value("MEETING"));
+    }
+
+    @Test
+    void createEvent_shouldDefaultToOther_whenNoKeywordMatched() throws Exception {
+        Map<String, Object> request = validRequest(
+                "Random personal block",
+                "无匹配关键词",
+                "2026-05-29T10:00:00",
+                "2026-05-29T11:00:00",
+                "线上"
+        );
+
+        mockMvc.perform(post("/api/calendar/events")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.category").value("OTHER"));
+    }
+
+    @Test
+    void createEvent_shouldReturnBadRequest_whenCategoryIsInvalid() throws Exception {
+        Map<String, Object> request = new HashMap<>(validRequest(
+                "错误分类",
+                "非法 category",
+                "2026-05-29T10:00:00",
+                "2026-05-29T11:00:00",
+                "线上"
+        ));
+        request.put("category", "BAD_CATEGORY");
+
+        mockMvc.perform(post("/api/calendar/events")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest());
     }
 
     @Test
@@ -232,6 +305,73 @@ class CalendarEventControllerTest {
         assertThat(updatedEvent.getStartTime()).isEqualTo(LocalDateTime.of(2026, 5, 29, 14, 0));
         assertThat(updatedEvent.getEndTime()).isEqualTo(LocalDateTime.of(2026, 5, 29, 15, 0));
         assertThat(updatedEvent.getLocation()).isEqualTo("会议室 A");
+    }
+
+    @Test
+    void updateEvent_shouldUpdateCategory_whenCategoryProvided() throws Exception {
+        CalendarEvent event = createEvent("工作日程", 9, 10);
+        event.setCategory(EventCategory.WORK);
+        CalendarEvent savedEvent = calendarEventRepository.saveAndFlush(event);
+        Map<String, Object> request = new HashMap<>(validRequest(
+                "生活日程",
+                "更新分类",
+                "2026-05-29T14:00:00",
+                "2026-05-29T15:00:00",
+                "健身房"
+        ));
+        request.put("category", "LIFE");
+
+        mockMvc.perform(put("/api/calendar/events/{id}", savedEvent.getId())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.category").value("LIFE"));
+
+        CalendarEvent updatedEvent = calendarEventRepository.findById(savedEvent.getId()).orElseThrow();
+        assertThat(updatedEvent.getCategory()).isEqualTo(EventCategory.LIFE);
+    }
+
+    @Test
+    void updateEvent_shouldKeepExistingCategory_whenCategoryMissing() throws Exception {
+        CalendarEvent event = createEvent("工作日程", 9, 10);
+        event.setCategory(EventCategory.WORK);
+        CalendarEvent savedEvent = calendarEventRepository.saveAndFlush(event);
+        Map<String, Object> request = validRequest(
+                "更新标题",
+                "未传 category",
+                "2026-05-29T14:00:00",
+                "2026-05-29T15:00:00",
+                "线上"
+        );
+
+        mockMvc.perform(put("/api/calendar/events/{id}", savedEvent.getId())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.category").value("WORK"));
+
+        CalendarEvent updatedEvent = calendarEventRepository.findById(savedEvent.getId()).orElseThrow();
+        assertThat(updatedEvent.getCategory()).isEqualTo(EventCategory.WORK);
+    }
+
+    @Test
+    void listEvents_shouldFilterByCategory() throws Exception {
+        CalendarEvent workEvent = createEvent("项目开发", 9, 10);
+        workEvent.setCategory(EventCategory.WORK);
+        CalendarEvent meetingEvent = createEvent("产品会议", 11, 12);
+        meetingEvent.setCategory(EventCategory.MEETING);
+        CalendarEvent studyEvent = createEvent("课程复习", 14, 15);
+        studyEvent.setCategory(EventCategory.STUDY);
+        calendarEventRepository.save(workEvent);
+        calendarEventRepository.save(meetingEvent);
+        calendarEventRepository.save(studyEvent);
+        calendarEventRepository.flush();
+
+        mockMvc.perform(get("/api/calendar/events").param("category", "MEETING"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.length()").value(1))
+                .andExpect(jsonPath("$.data[0].title").value("产品会议"))
+                .andExpect(jsonPath("$.data[0].category").value("MEETING"));
     }
 
     @Test
