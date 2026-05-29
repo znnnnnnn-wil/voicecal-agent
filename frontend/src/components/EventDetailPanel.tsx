@@ -42,32 +42,54 @@ function EventDetailPanel({ event, onClose }: EventDetailPanelProps) {
       {event && (
         <div className="mt-5 space-y-4">
           <div className="rounded-2xl border border-cyan-300/15 bg-cyan-300/[0.08] p-4">
-            <p className="text-lg font-semibold text-white">{event.title}</p>
-            <p className="mt-2 text-xs text-cyan-100">事件 ID #{event.id}</p>
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <p className="break-words text-lg font-semibold text-white">{event.title}</p>
+                <p className="mt-2 text-xs text-cyan-100">事件 ID #{event.id}</p>
+              </div>
+              <ReminderBadge event={event} />
+            </div>
           </div>
 
           <DetailRow label="开始时间" value={formatDateTime(event.startTime)} />
           <DetailRow label="结束时间" value={formatDateTime(event.endTime)} />
           <DetailRow label="地点" value={event.location || '未设置'} />
           <DetailRow label="分类" value={event.category || '未设置'} />
-          <DetailRow
-            label="提醒"
-            value={
-              event.reminderMinutes === null || event.reminderMinutes === undefined
-                ? '未设置'
-                : `${event.reminderMinutes} 分钟前`
-            }
-          />
+          <DetailRow label="提醒" value={formatReminder(event)} />
+          {event.remindedAt && <DetailRow label="提醒时间" value={formatDateTime(event.remindedAt)} />}
 
           <div className="rounded-2xl border border-white/10 bg-[#0d131a]/70 p-4">
             <p className="text-xs font-semibold text-slate-400">描述</p>
-            <p className="mt-2 text-sm leading-6 text-slate-200">
+            <p className="mt-2 break-words text-sm leading-6 text-slate-200">
               {event.description || '暂无描述'}
             </p>
           </div>
         </div>
       )}
     </section>
+  )
+}
+
+function ReminderBadge({ event }: { event: CalendarEvent }) {
+  if (event.reminderMinutes === null || event.reminderMinutes === undefined) {
+    return (
+      <span className="shrink-0 rounded-full border border-white/10 bg-white/[0.06] px-2.5 py-1 text-[11px] text-slate-300">
+        无提醒
+      </span>
+    )
+  }
+
+  const isTriggered = event.reminderTriggered === true
+  return (
+    <span
+      className={`shrink-0 rounded-full border px-2.5 py-1 text-[11px] ${
+        isTriggered
+          ? 'border-emerald-300/20 bg-emerald-300/10 text-emerald-100'
+          : 'border-amber-200/20 bg-amber-200/10 text-amber-100'
+      }`}
+    >
+      {isTriggered ? '已提醒' : '未提醒'}
+    </span>
   )
 }
 
@@ -78,6 +100,13 @@ function DetailRow({ label, value }: { label: string; value: string }) {
       <span className="text-right text-sm leading-6 text-slate-100">{value}</span>
     </div>
   )
+}
+
+function formatReminder(event: CalendarEvent) {
+  if (event.reminderMinutes === null || event.reminderMinutes === undefined) {
+    return '无提醒'
+  }
+  return `提前 ${event.reminderMinutes} 分钟，${event.reminderTriggered ? '已提醒' : '未提醒'}`
 }
 
 function formatDateTime(value: string) {

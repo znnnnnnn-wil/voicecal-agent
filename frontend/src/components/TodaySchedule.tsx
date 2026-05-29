@@ -76,25 +76,26 @@ function TodaySchedule({
       )}
 
       {!isLoading && sortedEvents.length > 0 && (
-      <div className="space-y-3">
-        {sortedEvents.map((event) => (
-          <div
-            className="rounded-2xl border border-white/10 bg-[#0d131a]/70 p-4"
-            key={event.id}
-          >
-            <div className="flex items-start justify-between gap-3">
-              <div>
-                <p className="text-xs font-medium text-slate-400">{formatTime(event.startTime)}</p>
-                <p className="mt-1 text-sm font-semibold text-white">{event.title}</p>
-                <p className="mt-1 text-xs text-slate-500">{event.location || '未设置地点'}</p>
+        <div className="space-y-3">
+          {sortedEvents.map((event) => (
+            <div
+              className="rounded-2xl border border-white/10 bg-[#0d131a]/70 p-4"
+              key={event.id}
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="text-xs font-medium text-slate-400">{formatTime(event.startTime)}</p>
+                  <p className="mt-1 break-words text-sm font-semibold text-white">{event.title}</p>
+                  <p className="mt-1 text-xs text-slate-500">{event.location || '未设置地点'}</p>
+                  <p className="mt-2 text-[11px] text-slate-500">{formatReminder(event)}</p>
+                </div>
+                <span className={`shrink-0 rounded-full border px-2.5 py-1 text-[11px] ${statusClass[getEventStatus(event)]}`}>
+                  {statusText[getEventStatus(event)]}
+                </span>
               </div>
-              <span className={`rounded-full border px-2.5 py-1 text-[11px] ${statusClass[getEventStatus(event)]}`}>
-                {statusText[getEventStatus(event)]}
-              </span>
             </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
       )}
     </section>
   )
@@ -109,6 +110,13 @@ function getEventStatus(event: CalendarEvent): keyof typeof statusText {
     return 'draft'
   }
   return 'confirmed'
+}
+
+function formatReminder(event: CalendarEvent) {
+  if (event.reminderMinutes === null || event.reminderMinutes === undefined) {
+    return '无提醒'
+  }
+  return `提醒：提前 ${event.reminderMinutes} 分钟，${event.reminderTriggered ? '已提醒' : '未提醒'}`
 }
 
 function formatTime(value: string) {
