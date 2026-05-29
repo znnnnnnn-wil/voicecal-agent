@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useState } from 'react'
 import type { ReplyState } from './components/AiReplyPanel'
 import AppShell from './components/AppShell'
-import CalendarBoard from './components/CalendarBoard'
+import CalendarView from './components/CalendarView'
 import DailySummaryCard from './components/DailySummaryCard'
+import EventDetailPanel from './components/EventDetailPanel'
 import OperationLog from './components/OperationLog'
 import StatusPreview from './components/StatusPreview'
 import TodaySchedule from './components/TodaySchedule'
@@ -20,6 +21,7 @@ import { chatWithAi, getDailySummary as fetchDailySummary } from './services/aiS
 import {
   getTodayEvents as fetchTodayEvents,
   getWeekEvents as fetchWeekEvents,
+  listCalendarEvents as fetchCalendarEvents,
 } from './services/calendarService'
 import type { DailySummary } from './types/ai'
 import type { CalendarEvent } from './types/calendar'
@@ -31,20 +33,25 @@ const initialReply =
 
 function App() {
   const [command, setCommand] = useState('帮我安排明天上午 10 点的设计评审会')
+  const [calendarEvents, setCalendarEvents] = useState<CalendarEvent[]>([])
   const [todayEvents, setTodayEvents] = useState<CalendarEvent[]>([])
   const [weekEvents, setWeekEvents] = useState<CalendarEvent[]>([])
+  const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null)
   const [dailySummary, setDailySummary] = useState<DailySummary | null>(null)
   const [chatError, setChatError] = useState<string | null>(null)
   const [chatSuccess, setChatSuccess] = useState(false)
+  const [calendarError, setCalendarError] = useState<string | null>(null)
   const [todayError, setTodayError] = useState<string | null>(null)
   const [weekError, setWeekError] = useState<string | null>(null)
   const [summaryError, setSummaryError] = useState<string | null>(null)
   const [reply, setReply] = useState(initialReply)
   const [replyState, setReplyState] = useState<ReplyState>('idle')
   const [feedback, setFeedback] = useState<FeedbackState>('idle')
+  const [isCalendarLoading, setIsCalendarLoading] = useState(false)
   const [isTodayLoading, setIsTodayLoading] = useState(false)
   const [isWeekLoading, setIsWeekLoading] = useState(false)
   const [isSummaryLoading, setIsSummaryLoading] = useState(false)
+  const [isUsingDemoCalendar, setIsUsingDemoCalendar] = useState(false)
   const [isUsingDemoToday, setIsUsingDemoToday] = useState(false)
   const [isUsingDemoWeek, setIsUsingDemoWeek] = useState(false)
   const [isUsingDemoSummary, setIsUsingDemoSummary] = useState(false)
@@ -60,6 +67,39 @@ function App() {
     },
     [appendLog],
   )
+
+  const loadCalendarEvents = useCallback(async () => {
+    setIsCalendarLoading(true)
+    setCalendarError(null)
+    setIsUsingDemoCalendar(false)
+    appendLog({
+      label: '加载日历视图',
+      detail: '正在请求 GET /api/calendar/events',
+      status: 'info',
+    })
+
+    try {
+      const events = await fetchCalendarEvents()
+      setCalendarEvents(events)
+      appendLog({
+        label: '日历视图加载成功',
+        detail: `后端返回 ${events.length} 个日程事件`,
+        status: 'success',
+      })
+    } catch (error) {
+      const message = getErrorMessage(error)
+      setCalendarEvents(demoCalendarEvents)
+      setCalendarError(message)
+      setIsUsingDemoCalendar(true)
+      appendLog({
+        label: '日历视图加载失败',
+        detail: '后端不可用，已切换到 demo fallback 日历数据',
+        status: 'pending',
+      })
+    } finally {
+      setIsCalendarLoading(false)
+    }
+  }, [appendLog])
 
   const loadTodayEvents = useCallback(async () => {
     setIsTodayLoading(true)
@@ -161,10 +201,19 @@ function App() {
   }, [appendLog])
 
   useEffect(() => {
+    void loadCalendarEvents()
     void loadTodayEvents()
     void loadWeekEvents()
     void loadDailySummary()
-  }, [loadDailySummary, loadTodayEvents, loadWeekEvents])
+  }, [loadCalendarEvents, loadDailySummary, loadTodayEvents, loadWeekEvents])
+
+  useEffect(() => {
+    if (!selectedEvent) {
+      return
+    }
+    const updatedEvent = calendarEvents.find((event) => event.id === selectedEvent.id)
+    setSelectedEvent(updatedEvent ?? null)
+  }, [calendarEvents, selectedEvent])
 
   const handleRunCommand = async () => {
     if (!command.trim()) {
@@ -197,10 +246,10 @@ function App() {
         detail: '后端 AI 对话接口已返回 reply',
         status: 'success',
       })
-      await Promise.all([loadTodayEvents(), loadWeekEvents(), loadDailySummary()])
+      await Promise.all([loadCalendarEvents(), loadTodayEvents(), loadWeekEvents(), loadDailySummary()])
       appendLog({
         label: 'Calendar data refreshed',
-        detail: 'AI 对话完成后已刷新今日、本周和每日摘要',
+        detail: 'AI 对话完成后已刷新日历、今日、本周和每日摘要',
         status: 'success',
       })
     } catch (error) {
@@ -217,8 +266,9 @@ function App() {
     }
   }
 
-  const dashboardError = todayError || weekError || summaryError
-  const isUsingAnyDemoData = isUsingDemoToday || isUsingDemoWeek || isUsingDemoSummary
+  const dashboardError = calendarError || todayError || weekError || summaryError
+  const isUsingAnyDemoData =
+    isUsingDemoCalendar || isUsingDemoToday || isUsingDemoWeek || isUsingDemoSummary
 
   return (
     <AppShell>
@@ -235,16 +285,18 @@ function App() {
             onRunCommand={handleRunCommand}
             reply={reply}
           />
-          <CalendarBoard
-            error={weekError}
-            events={weekEvents}
-            isLoading={isWeekLoading}
-            isUsingDemoEvents={isUsingDemoWeek}
-            onRetry={loadWeekEvents}
+          <CalendarView
+            error={calendarError}
+            events={calendarEvents}
+            isLoading={isCalendarLoading}
+            isUsingDemoEvents={isUsingDemoCalendar}
+            onEventSelect={setSelectedEvent}
+            onRetry={loadCalendarEvents}
           />
         </section>
 
         <aside className="grid self-start gap-5 lg:col-span-4">
+          <EventDetailPanel event={selectedEvent} onClose={() => setSelectedEvent(null)} />
           <TodaySchedule
             error={todayError}
             events={todayEvents}
