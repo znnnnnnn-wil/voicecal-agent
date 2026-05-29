@@ -5,6 +5,8 @@ export type CalendarEvent = {
   startTime: string
   endTime: string
   location?: string | null
+  category?: string | null
+  reminderMinutes?: number | null
   createdAt?: string
   updatedAt?: string
 }

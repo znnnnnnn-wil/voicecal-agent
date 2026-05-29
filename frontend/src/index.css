@@ -44,3 +44,142 @@ button {
   border-radius: 999px;
   background: rgba(148, 163, 184, 0.45);
 }
+
+.voicecal-calendar {
+  --fc-border-color: rgba(255, 255, 255, 0.1);
+  --fc-page-bg-color: transparent;
+  --fc-neutral-bg-color: rgba(255, 255, 255, 0.05);
+  --fc-list-event-hover-bg-color: rgba(103, 232, 249, 0.08);
+  --fc-today-bg-color: rgba(34, 211, 238, 0.1);
+  color: #e2e8f0;
+}
+
+.voicecal-calendar .fc {
+  font-family: inherit;
+}
+
+.voicecal-calendar .fc-toolbar {
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.voicecal-calendar .fc-toolbar-title {
+  color: #f8fafc;
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: 0;
+}
+
+.voicecal-calendar .fc-button {
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.07);
+  box-shadow: none;
+  color: #f8fafc;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 8px 12px;
+  text-transform: none;
+  transition:
+    background 160ms ease,
+    border-color 160ms ease,
+    transform 160ms ease;
+}
+
+.voicecal-calendar .fc-button:hover,
+.voicecal-calendar .fc-button:focus {
+  border-color: rgba(103, 232, 249, 0.35);
+  background: rgba(34, 211, 238, 0.14);
+  box-shadow: none;
+  transform: translateY(-1px);
+}
+
+.voicecal-calendar .fc-button-primary:not(:disabled).fc-button-active,
+.voicecal-calendar .fc-button-primary:not(:disabled):active {
+  border-color: rgba(103, 232, 249, 0.45);
+  background: rgba(103, 232, 249, 0.2);
+  color: #ecfeff;
+}
+
+.voicecal-calendar .fc-scrollgrid,
+.voicecal-calendar .fc-theme-standard td,
+.voicecal-calendar .fc-theme-standard th {
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.voicecal-calendar .fc-col-header-cell {
+  padding: 10px 0;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.voicecal-calendar .fc-col-header-cell-cushion {
+  color: #94a3b8;
+  font-size: 12px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.voicecal-calendar .fc-daygrid-day-number {
+  color: #cbd5e1;
+  font-size: 12px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.voicecal-calendar .fc-day-other .fc-daygrid-day-number {
+  color: #475569;
+}
+
+.voicecal-calendar .fc-daygrid-day-frame {
+  min-height: 104px;
+  padding: 4px;
+}
+
+.voicecal-calendar .fc-event {
+  border-radius: 10px;
+  box-shadow: 0 12px 24px rgba(8, 47, 73, 0.22);
+  cursor: pointer;
+  overflow: hidden;
+}
+
+.voicecal-calendar .fc-event-title,
+.voicecal-calendar .fc-event-time {
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.voicecal-calendar .fc-timegrid-slot-label,
+.voicecal-calendar .fc-timegrid-axis-cushion {
+  color: #64748b;
+  font-size: 11px;
+}
+
+.voicecal-calendar .fc-timegrid-now-indicator-line {
+  border-color: #fb7185;
+}
+
+.voicecal-calendar .fc-timegrid-now-indicator-arrow {
+  border-color: #fb7185;
+  color: #fb7185;
+}
+
+@media (max-width: 720px) {
+  .voicecal-calendar .fc-toolbar {
+    flex-direction: column;
+  }
+
+  .voicecal-calendar .fc-toolbar-chunk {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .voicecal-calendar .fc-toolbar-title {
+    font-size: 18px;
+  }
+
+  .voicecal-calendar .fc-daygrid-day-frame {
+    min-height: 84px;
+  }
+}
