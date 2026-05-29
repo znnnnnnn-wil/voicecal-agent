@@ -14,10 +14,10 @@ const feedbackText = {
 
 function StatusPreview({ chatError, eventsError, feedback, isUsingDemoEvents }: StatusPreviewProps) {
   return (
-    <section className="h-fit self-start rounded-[28px] border border-white/10 bg-white/[0.06] p-5 shadow-2xl shadow-black/25 backdrop-blur-xl">
+    <section className="h-fit self-start rounded-[28px] border border-white/10 bg-white/[0.065] p-5 shadow-2xl shadow-black/25 backdrop-blur-xl">
       <div className="mb-5">
-        <p className="text-sm font-semibold text-white">状态反馈</p>
-        <p className="mt-1 text-xs text-slate-400">界面状态样式示例</p>
+        <p className="text-sm font-semibold text-white">系统状态</p>
+        <p className="mt-1 text-xs text-slate-400">本地 Demo 与后端连接状态</p>
       </div>
 
       <div className="space-y-3">
@@ -51,7 +51,7 @@ function StatusPreview({ chatError, eventsError, feedback, isUsingDemoEvents }: 
           <p className="text-xs font-semibold text-amber-100">数据源状态</p>
           <p className="mt-1 text-xs leading-5 text-amber-50/80">
             {isUsingDemoEvents
-              ? '日历正在显示 demo fallback 数据。'
+              ? 'Showing demo data because the backend is unavailable.'
               : '日历数据来自后端接口。'}
             {chatError ? ` AI 请求错误：${chatError}` : ''}
             {eventsError ? ` 日历请求错误：${eventsError}` : ''}
