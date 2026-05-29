@@ -1,4 +1,6 @@
+import { useState } from 'react'
 import { getCategoryBadgeClass, getCategoryLabel } from '../lib/categoryUtils'
+import { downloadEventIcs } from '../services/icsService'
 import type { CalendarEvent } from '../types/calendar'
 
 type EventDetailPanelProps = {
@@ -14,8 +16,26 @@ const dateTimeFormatter = new Intl.DateTimeFormat('zh-CN', {
 })
 
 function EventDetailPanel({ event, onClose }: EventDetailPanelProps) {
+  const [isExporting, setIsExporting] = useState(false)
+  const [exportError, setExportError] = useState<string | null>(null)
+
+  const handleExportIcs = async () => {
+    if (!event) {
+      return
+    }
+    setIsExporting(true)
+    setExportError(null)
+    try {
+      await downloadEventIcs(event.id)
+    } catch (error) {
+      setExportError(getErrorMessage(error))
+    } finally {
+      setIsExporting(false)
+    }
+  }
+
   return (
-    <section className="h-fit self-start rounded-[28px] border border-white/10 bg-white/[0.06] p-5 shadow-2xl shadow-black/25 backdrop-blur-xl">
+    <section className="h-fit self-start rounded-[28px] border border-white/10 bg-white/[0.065] p-5 shadow-2xl shadow-black/25 backdrop-blur-xl">
       <div className="flex items-start justify-between gap-4">
         <div>
           <p className="text-sm font-semibold text-white">日程详情</p>
@@ -25,7 +45,8 @@ function EventDetailPanel({ event, onClose }: EventDetailPanelProps) {
         </div>
         {event && (
           <button
-            className="rounded-full border border-white/15 bg-white/[0.06] px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-white/[0.1]"
+            aria-label="关闭日程详情"
+            className="rounded-full border border-white/15 bg-white/[0.06] px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-white/[0.1] focus:outline-none focus:ring-2 focus:ring-cyan-200/40 focus:ring-offset-2 focus:ring-offset-[#0d131a]"
             onClick={onClose}
             type="button"
           >
@@ -35,14 +56,17 @@ function EventDetailPanel({ event, onClose }: EventDetailPanelProps) {
       </div>
 
       {!event && (
-        <div className="mt-5 rounded-2xl border border-dashed border-white/15 bg-[#0d131a]/70 p-5 text-sm leading-6 text-slate-400">
-          在月视图或周视图中点击任意日程，可在这里查看时间、地点、描述和提醒信息。
+        <div className="mt-5 rounded-2xl border border-dashed border-white/15 bg-[#0d131a]/70 p-5">
+          <p className="text-sm font-semibold text-white">请选择一个日程</p>
+          <p className="mt-2 text-sm leading-6 text-slate-400">
+            在月视图或周视图中点击任意日程，可在这里查看时间、地点、分类、提醒和导出信息。
+          </p>
         </div>
       )}
 
       {event && (
         <div className="mt-5 space-y-4">
-          <div className="rounded-2xl border border-cyan-300/15 bg-cyan-300/[0.08] p-4">
+          <div className="rounded-2xl border border-cyan-300/15 bg-cyan-300/[0.08] p-4 shadow-inner shadow-cyan-200/[0.02]">
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
                 <p className="break-words text-lg font-semibold text-white">{event.title}</p>
@@ -50,6 +74,20 @@ function EventDetailPanel({ event, onClose }: EventDetailPanelProps) {
               </div>
               <ReminderBadge event={event} />
             </div>
+            <button
+              aria-label="导出当前日程 ICS 文件"
+              className="mt-4 w-full rounded-full border border-cyan-200/25 bg-cyan-200/10 px-4 py-2 text-xs font-semibold text-cyan-50 transition hover:border-cyan-200/40 hover:bg-cyan-200/15 focus:outline-none focus:ring-2 focus:ring-cyan-200/40 focus:ring-offset-2 focus:ring-offset-[#0d131a] disabled:cursor-not-allowed disabled:opacity-60"
+              disabled={isExporting}
+              onClick={handleExportIcs}
+              type="button"
+            >
+              {isExporting ? 'Exporting...' : '导出 ICS'}
+            </button>
+            {exportError && (
+              <p className="mt-3 rounded-2xl border border-rose-300/20 bg-rose-300/10 p-3 text-xs leading-5 text-rose-50">
+                {exportError}
+              </p>
+            )}
           </div>
 
           <DetailRow label="开始时间" value={formatDateTime(event.startTime)} />
@@ -117,6 +155,13 @@ function formatReminder(event: CalendarEvent) {
 
 function formatDateTime(value: string) {
   return dateTimeFormatter.format(new Date(value))
+}
+
+function getErrorMessage(error: unknown) {
+  if (error instanceof Error) {
+    return error.message
+  }
+  return '导出 ICS 失败，请稍后重试。'
 }
 
 export default EventDetailPanel

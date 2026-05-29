@@ -23,7 +23,7 @@ function RecentReminders({
   onRetry,
 }: RecentRemindersProps) {
   return (
-    <section className="h-fit self-start rounded-[28px] border border-white/10 bg-white/[0.06] p-5 shadow-2xl shadow-black/25 backdrop-blur-xl">
+    <section className="h-fit self-start rounded-[28px] border border-white/10 bg-white/[0.065] p-5 shadow-2xl shadow-black/25 backdrop-blur-xl">
       <div className="mb-5 flex items-start justify-between gap-4">
         <div>
           <p className="text-sm font-semibold text-white">最近提醒</p>
@@ -42,7 +42,8 @@ function RecentReminders({
             Showing demo reminders because the backend is unavailable.
           </p>
           <button
-            className="mt-2 text-xs font-semibold text-amber-100 underline underline-offset-4"
+            aria-label="重新加载最近提醒"
+            className="mt-2 rounded-full border border-amber-200/25 bg-amber-200/10 px-3 py-1.5 text-xs font-semibold text-amber-100 transition hover:bg-amber-200/15"
             onClick={onRetry}
             type="button"
           >
@@ -71,7 +72,7 @@ function RecentReminders({
       {!isLoading && reminders.length > 0 && (
         <div className="space-y-3">
           {reminders.map((reminder) => (
-            <div className="rounded-2xl border border-white/10 bg-[#0d131a]/70 p-4" key={reminder.eventId}>
+            <div className="rounded-2xl border border-white/10 bg-[#0d131a]/70 p-4 shadow-inner shadow-white/[0.02]" key={reminder.eventId}>
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
                   <p className="truncate text-sm font-semibold text-white">{reminder.title}</p>
