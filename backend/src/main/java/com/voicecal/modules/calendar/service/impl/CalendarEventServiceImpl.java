@@ -104,7 +104,7 @@ public class CalendarEventServiceImpl implements CalendarEventService {
     @Transactional
     public void deleteEvent(Long id) {
         CalendarEvent event = findActiveEvent(id);
-        event.setStatus(EventStatus.DELETED);
+        calendarEventRepository.delete(event);
     }
 
     private CalendarEvent findActiveEvent(Long id) {
