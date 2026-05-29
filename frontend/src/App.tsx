@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import AiCommandPanel from './components/AiCommandPanel'
-import AiReplyPanel, { type ReplyState } from './components/AiReplyPanel'
+import type { ReplyState } from './components/AiReplyPanel'
 import AppShell from './components/AppShell'
 import CalendarBoard from './components/CalendarBoard'
 import DailySummaryCard from './components/DailySummaryCard'
@@ -8,7 +7,7 @@ import OperationLog from './components/OperationLog'
 import StatusPreview from './components/StatusPreview'
 import TodaySchedule from './components/TodaySchedule'
 import TopNav from './components/TopNav'
-import VoiceInputCard from './components/VoiceInputCard'
+import VoiceAssistantCard from './components/VoiceAssistantCard'
 import WeekSummary from './components/WeekSummary'
 import {
   demoCalendarEvents,
@@ -54,6 +53,13 @@ function App() {
   const appendLog = useCallback((item: Omit<OperationLogItem, 'time'>) => {
     setLogs((currentLogs) => [{ time: '刚刚', ...item }, ...currentLogs].slice(0, 6))
   }, [])
+
+  const appendAssistantLog = useCallback(
+    (label: string, detail: string, status: OperationLogItem['status']) => {
+      appendLog({ label, detail, status })
+    },
+    [appendLog],
+  )
 
   const loadTodayEvents = useCallback(async () => {
     setIsTodayLoading(true)
@@ -175,7 +181,7 @@ function App() {
     setChatError(null)
     setChatSuccess(false)
     appendLog({
-      label: '提交 AI 指令',
+      label: 'AI command sent',
       detail: '正在请求 POST /api/ai/chat',
       status: 'info',
     })
@@ -187,8 +193,14 @@ function App() {
       setChatSuccess(true)
       setReply(response.reply)
       appendLog({
-        label: '收到 AI 回复',
+        label: 'AI reply received',
         detail: '后端 AI 对话接口已返回 reply',
+        status: 'success',
+      })
+      await Promise.all([loadTodayEvents(), loadWeekEvents(), loadDailySummary()])
+      appendLog({
+        label: 'Calendar data refreshed',
+        detail: 'AI 对话完成后已刷新今日、本周和每日摘要',
         status: 'success',
       })
     } catch (error) {
@@ -213,18 +225,16 @@ function App() {
       <TopNav />
       <main className="mx-auto grid w-full max-w-7xl items-start gap-5 px-5 py-6 sm:px-8 lg:grid-cols-12 lg:px-10">
         <section className="grid self-start gap-5 lg:col-span-8">
-          <AiCommandPanel
+          <VoiceAssistantCard
             command={command}
             error={chatError}
             isLoading={replyState === 'loading'}
             isSuccess={chatSuccess}
+            onLog={appendAssistantLog}
             onCommandChange={setCommand}
             onRunCommand={handleRunCommand}
+            reply={reply}
           />
-          <div className="grid items-start gap-5 xl:grid-cols-[0.95fr_1.05fr]">
-            <VoiceInputCard />
-            <AiReplyPanel reply={reply} state={replyState} />
-          </div>
           <CalendarBoard
             error={weekError}
             events={weekEvents}
