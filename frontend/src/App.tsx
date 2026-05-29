@@ -6,18 +6,18 @@ import StatusCard from './components/StatusCard'
 
 const capabilities = [
   {
-    title: 'Natural language scheduling',
-    description: 'Turn plain requests into structured calendar actions.',
+    title: '自然语言安排日程',
+    description: '把日常表达转换成清晰的日程草稿，减少来回确认。',
     accent: 'from-emerald-300 to-cyan-300',
   },
   {
-    title: 'Calendar event management',
-    description: 'Create, review, and prepare events from one focused workspace.',
+    title: '日历事件管理',
+    description: '在一个专注的工作区里查看安排、准备会议和管理事件。',
     accent: 'from-violet-300 to-fuchsia-300',
   },
   {
-    title: 'Tool-calling ready backend',
-    description: 'Designed for LangChain4j tools as model providers come online.',
+    title: '后端工具调用就绪',
+    description: '已为 LangChain4j 工具调用打好基础，后续可接入真实模型。',
     accent: 'from-amber-200 to-rose-300',
   },
 ]
@@ -33,11 +33,11 @@ function App() {
             </div>
             <div>
               <p className="text-sm font-semibold text-white">VoiceCal Agent</p>
-              <p className="text-xs text-slate-400">AI Calendar Assistant</p>
+              <p className="text-xs text-slate-400">AI 日程助手</p>
             </div>
           </div>
           <div className="rounded-full border border-emerald-300/20 bg-emerald-300/10 px-3 py-1 text-xs font-medium text-emerald-100">
-            Local Demo
+            本地演示
           </div>
         </nav>
 
