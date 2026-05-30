@@ -115,7 +115,7 @@ public class CalendarEventTools {
         } catch (ConstraintViolationException exception) {
             return "创建日程失败：" + formatConstraintViolations(exception);
         } catch (CustomException exception) {
-            return "创建日程失败：" + exception.getMessage();
+            return "success=false, message=" + exception.getMessage();
         }
     }
 
