@@ -1,18 +1,6 @@
 import { getCategoryBadgeClass, getCategoryLabel } from '../lib/categoryUtils'
 import type { CalendarEvent } from '../types/calendar'
 
-const statusClass = {
-  confirmed: 'bg-emerald-300/10 text-emerald-100 border-emerald-300/20',
-  draft: 'bg-amber-200/10 text-amber-100 border-amber-200/20',
-  focus: 'bg-violet-300/10 text-violet-100 border-violet-300/20',
-}
-
-const statusText = {
-  confirmed: '已确认',
-  draft: '草稿',
-  focus: '专注',
-}
-
 type TodayScheduleProps = {
   events: CalendarEvent[]
   error: string | null
@@ -21,83 +9,60 @@ type TodayScheduleProps = {
   onRetry: () => void
 }
 
-function TodaySchedule({
-  events,
-  error,
-  isLoading,
-  isUsingDemoEvents,
-  onRetry,
-}: TodayScheduleProps) {
-  const sortedEvents = [...events].sort((left, right) =>
-    left.startTime.localeCompare(right.startTime),
-  )
+function TodaySchedule({ events, error, isLoading, isUsingDemoEvents, onRetry }: TodayScheduleProps) {
+  const sortedEvents = [...events].sort((left, right) => left.startTime.localeCompare(right.startTime))
+  const totalMinutes = sortedEvents.reduce((total, event) => total + getDurationMinutes(event), 0)
+  const reminderCount = sortedEvents.filter((event) => event.reminderMinutes !== null && event.reminderMinutes !== undefined).length
 
   return (
-    <section className="h-fit self-start rounded-[28px] border border-white/10 bg-white/[0.06] p-5 shadow-2xl shadow-black/25 backdrop-blur-xl">
-      <div className="mb-5 flex items-center justify-between">
+    <section className="rounded-2xl border border-[#dadce0] bg-white p-4 shadow-sm">
+      <div className="mb-4 flex items-center justify-between">
         <div>
-          <p className="text-sm font-semibold text-white">今日日程</p>
-          <p className="mt-1 text-xs text-slate-400">
+          <p className="text-sm font-semibold text-[#202124]">今日概览</p>
+          <p className="mt-1 text-xs text-[#5f6368]">
             {isUsingDemoEvents ? 'Demo fallback data' : `${sortedEvents.length} 个后端日程`}
           </p>
         </div>
-        <span className="rounded-full bg-white/[0.08] px-3 py-1 text-xs text-slate-300">今天</span>
+        <span className="rounded-full bg-blue-50 px-2.5 py-1 text-xs font-medium text-[#1a73e8]">今天</span>
+      </div>
+
+      <div className="mb-4 grid grid-cols-3 gap-2">
+        <Metric label="日程" value={String(sortedEvents.length)} />
+        <Metric label="总时长" value={formatMinutes(totalMinutes)} />
+        <Metric label="提醒" value={String(reminderCount)} />
       </div>
 
       {error && (
-        <div className="mb-3 rounded-2xl border border-amber-200/20 bg-amber-200/10 p-3">
-          <p className="text-xs leading-5 text-amber-50">
-            Showing demo data because the backend is unavailable.
-          </p>
-          <button
-            className="mt-2 text-xs font-semibold text-amber-100 underline underline-offset-4"
-            onClick={onRetry}
-            type="button"
-          >
+        <div className="mb-3 rounded-lg border border-amber-200 bg-amber-50 p-3">
+          <p className="text-xs leading-5 text-amber-800">后端暂不可用，当前展示 demo fallback 数据。</p>
+          <button className="mt-2 text-xs font-semibold text-amber-700 underline underline-offset-4" onClick={onRetry} type="button">
             重试加载
           </button>
         </div>
       )}
 
-      {isLoading && (
-        <div className="space-y-3">
-          {Array.from({ length: 4 }).map((_, index) => (
-            <div className="h-20 animate-pulse rounded-2xl bg-white/10" key={index} />
-          ))}
-        </div>
-      )}
+      {isLoading && <div className="space-y-2">{Array.from({ length: 3 }).map((_, index) => <div className="h-14 animate-pulse rounded-xl bg-slate-100" key={index} />)}</div>}
 
       {!isLoading && sortedEvents.length === 0 && (
-        <div className="rounded-2xl border border-dashed border-white/15 bg-[#0d131a]/70 p-5">
-          <p className="text-sm font-semibold text-white">今天暂无日程</p>
-          <p className="mt-2 text-xs leading-5 text-slate-400">
-            后端当前没有返回今天的事件。你可以通过后端 API 创建日程，或让 VoiceCal 先准备草稿。
-          </p>
+        <div className="rounded-xl border border-dashed border-[#dadce0] bg-[#f8fafc] p-4">
+          <p className="text-sm font-semibold text-[#202124]">今天暂无日程</p>
+          <p className="mt-1 text-xs leading-5 text-[#5f6368]">可以通过语音或文本创建一个新的安排。</p>
         </div>
       )}
 
       {!isLoading && sortedEvents.length > 0 && (
-        <div className="space-y-3">
-          {sortedEvents.map((event) => (
-            <div
-              className="rounded-2xl border border-white/10 bg-[#0d131a]/70 p-4"
-              key={event.id}
-            >
-              <div className="flex items-start justify-between gap-3">
+        <div className="space-y-2">
+          {sortedEvents.slice(0, 4).map((event) => (
+            <div className="rounded-xl border border-[#e5e7eb] bg-[#f8fafc] p-3" key={event.id}>
+              <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0">
-                  <p className="text-xs font-medium text-slate-400">{formatTime(event.startTime)}</p>
-                  <p className="mt-1 break-words text-sm font-semibold text-white">{event.title}</p>
-                  <p className="mt-1 text-xs text-slate-500">{event.location || '未设置地点'}</p>
-                  <p className="mt-2 text-[11px] text-slate-500">{formatReminder(event)}</p>
+                  <p className="text-xs font-medium text-[#5f6368]">{formatTime(event.startTime)}</p>
+                  <p className="mt-1 truncate text-sm font-semibold text-[#202124]">{event.title}</p>
+                  <p className="mt-1 truncate text-xs text-[#5f6368]">{event.location || '未设置地点'}</p>
                 </div>
-                <div className="flex shrink-0 flex-col items-end gap-2">
-                  <span className={`rounded-full border px-2.5 py-1 text-[11px] ${getCategoryBadgeClass(event.category)}`}>
-                    {getCategoryLabel(event.category)}
-                  </span>
-                  <span className={`rounded-full border px-2.5 py-1 text-[11px] ${statusClass[getEventStatus(event)]}`}>
-                    {statusText[getEventStatus(event)]}
-                  </span>
-                </div>
+                <span className={`shrink-0 rounded-full border px-2 py-0.5 text-[11px] ${getCategoryBadgeClass(event.category)}`}>
+                  {getCategoryLabel(event.category)}
+                </span>
               </div>
             </div>
           ))}
@@ -107,22 +72,26 @@ function TodaySchedule({
   )
 }
 
-function getEventStatus(event: CalendarEvent): keyof typeof statusText {
-  const title = event.title.toLowerCase()
-  if (title.includes('focus') || title.includes('专注')) {
-    return 'focus'
-  }
-  if (event.description?.toLowerCase().includes('draft')) {
-    return 'draft'
-  }
-  return 'confirmed'
+function Metric({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-xl bg-[#f8fafc] p-3">
+      <p className="text-base font-semibold text-[#202124]">{value}</p>
+      <p className="mt-1 text-[11px] text-[#5f6368]">{label}</p>
+    </div>
+  )
 }
 
-function formatReminder(event: CalendarEvent) {
-  if (event.reminderMinutes === null || event.reminderMinutes === undefined) {
-    return '无提醒'
-  }
-  return `提醒：提前 ${event.reminderMinutes} 分钟，${event.reminderTriggered ? '已提醒' : '未提醒'}`
+function getDurationMinutes(event: CalendarEvent) {
+  const start = new Date(event.startTime).getTime()
+  const end = new Date(event.endTime).getTime()
+  if (Number.isNaN(start) || Number.isNaN(end) || end <= start) return 0
+  return Math.round((end - start) / 1000 / 60)
+}
+
+function formatMinutes(minutes: number) {
+  if (minutes < 60) return `${minutes}m`
+  const hours = minutes / 60
+  return Number.isInteger(hours) ? `${hours}h` : `${hours.toFixed(1)}h`
 }
 
 function formatTime(value: string) {
