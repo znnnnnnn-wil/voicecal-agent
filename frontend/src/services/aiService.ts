@@ -9,8 +9,9 @@ export function chatWithAi(message: string) {
 
 export function transcribeAudio(audio: Blob) {
   const formData = new FormData()
-  formData.append('audio', audio, 'voicecal-command.webm')
-  return apiPostForm<SpeechTranscriptionResponse>('/api/ai/speech/transcriptions', formData)
+  const extension = audio.type.includes('wav') ? 'wav' : 'webm'
+  formData.append('audio', audio, `voicecal-command.${extension}`)
+  return apiPostForm<SpeechTranscriptionResponse>('/api/voice/transcribe', formData)
 }
 
 export function getDailySummary(date?: string, timezone = DEFAULT_TIMEZONE) {

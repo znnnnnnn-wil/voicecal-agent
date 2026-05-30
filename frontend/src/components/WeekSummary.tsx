@@ -2,12 +2,13 @@ import { getCategoryBadgeClass, getCategoryLabel, normalizeCategory } from '../l
 import type { CalendarEvent } from '../types/calendar'
 
 type WeekSummaryProps = {
+  error: string | null
   events: CalendarEvent[]
   isLoading: boolean
   isUsingDemoEvents: boolean
 }
 
-function WeekSummary({ events, isLoading, isUsingDemoEvents }: WeekSummaryProps) {
+function WeekSummary({ error, events, isLoading, isUsingDemoEvents }: WeekSummaryProps) {
   const weekStats = buildWeekStats(events)
   const categoryStats = buildCategoryStats(events)
 
@@ -28,6 +29,12 @@ function WeekSummary({ events, isLoading, isUsingDemoEvents }: WeekSummaryProps)
           </div>
         ))}
       </div>
+
+      {error && (
+        <p className="mt-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs leading-5 text-amber-700">
+          {error}
+        </p>
+      )}
 
       <div className="mt-3 flex flex-wrap gap-2">
         {categoryStats.map((stat) => (

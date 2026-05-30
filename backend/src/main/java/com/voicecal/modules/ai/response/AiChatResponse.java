@@ -1,9 +1,14 @@
 package com.voicecal.modules.ai.response;
 
 /**
- * AI 对话响应对象。
+ * AI 对话响应。
  *
- * @param reply AI 回复内容
+ * @param reply 回复文本
+ * @param routedBy 路由来源，FAST_RULE 或 LLM
  */
-public record AiChatResponse(String reply) {
+public record AiChatResponse(String reply, String routedBy) {
+
+    public AiChatResponse(String reply) {
+        this(reply, "LLM");
+    }
 }

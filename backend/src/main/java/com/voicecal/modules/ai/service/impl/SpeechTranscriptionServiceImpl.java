@@ -15,6 +15,8 @@ import java.time.Duration;
 import java.util.Base64;
 import java.util.List;
 import java.util.Map;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -25,7 +27,12 @@ import org.springframework.web.multipart.MultipartFile;
 @Service
 public class SpeechTranscriptionServiceImpl implements SpeechTranscriptionService {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(SpeechTranscriptionServiceImpl.class);
     private static final String DEFAULT_AUDIO_MIME_TYPE = "audio/webm";
+    private static final int MAX_LOG_BODY_LENGTH = 1000;
+    private static final String CONTEXT_PROMPT = """
+            VoiceCal Agent 是语音日历助手。常见词包括：日程、会议、提醒、提交代码、项目、面试、今天、明天、后天、上午、下午、晚上、下周、空闲、删除、确认、取消、导出 ICS。常见分类包括：工作、学习、生活、会议、面试、其他。
+            """;
 
     private final ObjectMapper objectMapper;
     private final HttpClient httpClient;
@@ -62,6 +69,7 @@ public class SpeechTranscriptionServiceImpl implements SpeechTranscriptionServic
      */
     @Override
     public SpeechTranscriptionResponse transcribe(MultipartFile audio) {
+        long startedAt = System.currentTimeMillis();
         validateAudio(audio);
         if (apiKey == null || apiKey.isBlank()) {
             throw CustomException.create(ResultCodeEnum.PARAMS_ERROR, "语音识别服务未配置 DASHSCOPE_API_KEY");
@@ -69,6 +77,12 @@ public class SpeechTranscriptionServiceImpl implements SpeechTranscriptionServic
 
         try {
             String requestBody = buildRequestBody(audio);
+            LOGGER.info(
+                    "开始语音识别，model={}, contentType={}, size={} bytes",
+                    modelName,
+                    audio.getContentType(),
+                    audio.getSize()
+            );
             HttpRequest request = HttpRequest.newBuilder()
                     .uri(URI.create(normalizeBaseUrl(baseUrl) + "/chat/completions"))
                     .timeout(Duration.ofSeconds(timeoutSeconds))
@@ -77,11 +91,13 @@ public class SpeechTranscriptionServiceImpl implements SpeechTranscriptionServic
                     .POST(HttpRequest.BodyPublishers.ofString(requestBody))
                     .build();
             HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-            return parseResponse(response);
+            return parseResponse(response, System.currentTimeMillis() - startedAt);
         } catch (IOException exception) {
+            LOGGER.warn("语音识别读取或网络请求失败", exception);
             throw CustomException.create(ResultCodeEnum.FAIL, "读取或识别音频失败");
         } catch (InterruptedException exception) {
             Thread.currentThread().interrupt();
+            LOGGER.warn("语音识别请求被中断", exception);
             throw CustomException.create(ResultCodeEnum.FAIL, "语音识别请求被中断");
         }
     }
@@ -100,35 +116,55 @@ public class SpeechTranscriptionServiceImpl implements SpeechTranscriptionServic
         if (mimeType == null || mimeType.isBlank()) {
             mimeType = DEFAULT_AUDIO_MIME_TYPE;
         }
-        String encodedAudio = Base64.getEncoder().encodeToString(audio.getBytes());
-        String dataUrl = "data:" + mimeType + ";base64," + encodedAudio;
+        String dataUrl = "data:" + mimeType + ";base64," + Base64.getEncoder().encodeToString(audio.getBytes());
         Map<String, Object> request = Map.of(
                 "model", modelName,
-                "messages", List.of(Map.of(
-                        "role", "user",
-                        "content", List.of(Map.of(
-                                "type", "input_audio",
-                                "input_audio", Map.of("data", dataUrl)
-                        ))
-                )),
+                "messages", List.of(
+                        Map.of(
+                                "role", "system",
+                                "content", List.of(Map.of("type", "text", "text", CONTEXT_PROMPT))
+                        ),
+                        Map.of(
+                                "role", "user",
+                                "content", List.of(Map.of(
+                                        "type", "input_audio",
+                                        "input_audio", Map.of("data", dataUrl)
+                                ))
+                        )
+                ),
+                "asr_options", Map.of("enable_itn", true),
                 "stream", false
         );
         return objectMapper.writeValueAsString(request);
     }
 
-    private SpeechTranscriptionResponse parseResponse(HttpResponse<String> response) throws IOException {
+    private SpeechTranscriptionResponse parseResponse(HttpResponse<String> response, long durationMs) throws IOException {
         if (response.statusCode() < 200 || response.statusCode() >= 300) {
-            throw CustomException.create(ResultCodeEnum.FAIL, "语音识别服务返回异常");
+            LOGGER.warn(
+                    "语音识别服务返回异常，status={}, body={}",
+                    response.statusCode(),
+                    truncateForLog(response.body())
+            );
+            throw CustomException.create(ResultCodeEnum.FAIL, "语音识别服务返回异常，请查看后端日志中的 ASR 响应详情");
         }
         JsonNode root = objectMapper.readTree(response.body());
         String text = root.path("choices").path(0).path("message").path("content").asText("").trim();
         if (text.isBlank()) {
+            LOGGER.warn("语音识别结果为空，body={}", truncateForLog(response.body()));
             throw CustomException.create(ResultCodeEnum.FAIL, "语音识别结果为空");
         }
-        return new SpeechTranscriptionResponse(text);
+        LOGGER.info("语音识别成功，model={}, durationMs={}, textLength={}", modelName, durationMs, text.length());
+        return new SpeechTranscriptionResponse(text, modelName, durationMs, true, "识别成功");
     }
 
     private String normalizeBaseUrl(String value) {
         return value.endsWith("/") ? value.substring(0, value.length() - 1) : value;
+    }
+
+    private String truncateForLog(String body) {
+        if (body == null || body.length() <= MAX_LOG_BODY_LENGTH) {
+            return body;
+        }
+        return body.substring(0, MAX_LOG_BODY_LENGTH) + "...";
     }
 }

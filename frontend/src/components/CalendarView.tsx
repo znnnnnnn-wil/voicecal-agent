@@ -3,6 +3,7 @@ import dayGridPlugin from '@fullcalendar/daygrid'
 import interactionPlugin from '@fullcalendar/interaction'
 import timeGridPlugin from '@fullcalendar/timegrid'
 import type { EventClickArg, EventInput } from '@fullcalendar/core'
+import { useRef } from 'react'
 import { getCategoryEventColor, getCategoryLabel } from '../lib/categoryUtils'
 import type { CalendarEvent } from '../types/calendar'
 
@@ -23,7 +24,18 @@ function CalendarView({
   onEventSelect,
   onRetry,
 }: CalendarViewProps) {
+  const calendarRef = useRef<FullCalendar | null>(null)
   const calendarEvents = events.map(toCalendarEvent)
+  const today = formatLocalDate(new Date())
+
+  const switchToTodayView = (viewName: 'dayGridMonth' | 'timeGridWeek' | 'timeGridDay') => {
+    const calendarApi = calendarRef.current?.getApi()
+    if (!calendarApi) {
+      return
+    }
+    calendarApi.today()
+    calendarApi.changeView(viewName)
+  }
 
   return (
     <section className="min-w-0 rounded-2xl border border-[#dadce0] bg-white shadow-sm">
@@ -77,21 +89,38 @@ function CalendarView({
         ) : (
           <div className="voicecal-calendar">
             <FullCalendar
+              ref={calendarRef}
               allDaySlot={false}
+              customButtons={{
+                todayMonth: {
+                  text: '月',
+                  click: () => switchToTodayView('dayGridMonth'),
+                },
+                todayWeek: {
+                  text: '周',
+                  click: () => switchToTodayView('timeGridWeek'),
+                },
+                todayDay: {
+                  text: '日',
+                  click: () => switchToTodayView('timeGridDay'),
+                },
+              }}
               dayMaxEvents={3}
               eventClick={handleEventClick(onEventSelect)}
               events={calendarEvents}
               headerToolbar={{
                 left: 'prev,next today',
                 center: 'title',
-                right: 'dayGridMonth,timeGridWeek,timeGridDay',
+                right: 'todayDay,todayWeek,todayMonth',
               }}
               height="auto"
+              initialDate={today}
               initialView="dayGridMonth"
               locale="zh-cn"
               nowIndicator
               plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
-              slotMinTime="07:00:00"
+              slotMaxTime="24:00:00"
+              slotMinTime="00:00:00"
             />
             {events.length === 0 && (
               <div className="mt-3 rounded-xl border border-dashed border-[#dadce0] bg-[#f8fafc] p-4 text-sm text-[#5f6368]">
@@ -145,6 +174,13 @@ function isCalendarEvent(value: unknown): value is CalendarEvent {
     'startTime' in value &&
     'endTime' in value
   )
+}
+
+function formatLocalDate(date: Date) {
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
 }
 
 export default CalendarView
