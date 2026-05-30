@@ -42,16 +42,6 @@ public enum ResultCodeEnum {
     CALENDAR_EVENT_CONFLICT("A1409", "日程时间冲突", HttpStatus.BAD_REQUEST),
 
     /**
-     * 待确认操作不存在。
-     */
-    PENDING_ACTION_NOT_FOUND("A2404", "待确认操作不存在", HttpStatus.NOT_FOUND),
-
-    /**
-     * 待确认操作已过期。
-     */
-    PENDING_ACTION_EXPIRED("A2410", "待确认操作已过期", HttpStatus.GONE),
-
-    /**
      * 用户请求服务异常。
      */
     FAIL("A0500", "用户请求服务异常", HttpStatus.INTERNAL_SERVER_ERROR);
