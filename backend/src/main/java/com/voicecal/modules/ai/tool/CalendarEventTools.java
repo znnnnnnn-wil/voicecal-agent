@@ -4,6 +4,7 @@ import com.voicecal.common.enums.ResultCodeEnum;
 import com.voicecal.common.enums.dao.EventCategory;
 import com.voicecal.common.exception.CustomException;
 import com.voicecal.common.exception.ResourceNotFoundException;
+import com.voicecal.modules.ai.context.AiRequestContext;
 import com.voicecal.modules.assistant.pending.PendingActionResponse;
 import com.voicecal.modules.assistant.pending.PendingActionService;
 import com.voicecal.modules.calendar.entity.request.CalendarEventCreateRequest;
@@ -194,6 +195,10 @@ public class CalendarEventTools {
             @P(name = "eventId", description = "Calendar event id to delete") Long eventId
     ) {
         try {
+            CalendarEventResponse event = calendarEventService.getEvent(eventId);
+            if (isMeetingDeleteRequest() && !isMeetingEvent(event)) {
+                return "删除操作已拦截：用户要求删除会议，但目标日程不是会议。请补充会议标题或更精确的时间。";
+            }
             PendingActionResponse action = pendingActionService.createPendingDeleteAction(conversationId, eventId);
             return "已创建待确认删除操作，请确认后再删除。\n"
                     + "操作 ID: " + action.id() + "\n"
@@ -266,10 +271,47 @@ public class CalendarEventTools {
             @P(name = "actionId", description = "Pending action id") String actionId
     ) {
         try {
+            if (!isExplicitConfirmRequest()) {
+                return "确认操作已拦截：只有用户明确回复“确认”或“确定”时，才会执行待确认操作。";
+            }
             return pendingActionService.confirmPendingAction(conversationId, actionId);
         } catch (CustomException exception) {
             return "确认待确认操作失败：" + exception.getMessage();
         }
+    }
+
+    private boolean isMeetingDeleteRequest() {
+        String message = normalizeContextMessage();
+        return message.contains("删除") && (message.contains("会议") || message.contains("meeting"));
+    }
+
+    private boolean isExplicitConfirmRequest() {
+        String message = normalizeContextMessage();
+        return message.equals("确认")
+                || message.equals("确定")
+                || message.equals("是")
+                || message.equals("yes")
+                || message.equals("confirm")
+                || message.equals("ok");
+    }
+
+    private boolean isMeetingEvent(CalendarEventResponse event) {
+        if (event.category() == EventCategory.MEETING) {
+            return true;
+        }
+        String text = ((event.title() == null ? "" : event.title())
+                + " "
+                + (event.description() == null ? "" : event.description())).toLowerCase();
+        return text.contains("会议")
+                || text.contains("meeting")
+                || text.contains("review")
+                || text.contains("sync")
+                || text.contains("standup");
+    }
+
+    private String normalizeContextMessage() {
+        String message = AiRequestContext.getUserMessage();
+        return message == null ? "" : message.trim().toLowerCase();
     }
 
     /**
