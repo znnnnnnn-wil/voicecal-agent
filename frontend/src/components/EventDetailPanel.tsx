@@ -20,9 +20,7 @@ function EventDetailPanel({ event, onClose }: EventDetailPanelProps) {
   const [exportError, setExportError] = useState<string | null>(null)
 
   const handleExportIcs = async () => {
-    if (!event) {
-      return
-    }
+    if (!event) return
     setIsExporting(true)
     setExportError(null)
     try {
@@ -35,18 +33,18 @@ function EventDetailPanel({ event, onClose }: EventDetailPanelProps) {
   }
 
   return (
-    <section className="h-fit self-start rounded-[28px] border border-white/10 bg-white/[0.065] p-5 shadow-2xl shadow-black/25 backdrop-blur-xl">
-      <div className="flex items-start justify-between gap-4">
+    <section className="rounded-2xl border border-[#dadce0] bg-white p-4 shadow-sm">
+      <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="text-sm font-semibold text-white">日程详情</p>
-          <p className="mt-1 text-xs text-slate-400">
-            {event ? '点击日历事件后展示' : '选择一个日程查看详情'}
+          <p className="text-sm font-semibold text-[#202124]">日程详情</p>
+          <p className="mt-1 text-xs text-[#5f6368]">
+            {event ? '当前选中日程' : '点击日历事件查看详情'}
           </p>
         </div>
         {event && (
           <button
             aria-label="关闭日程详情"
-            className="rounded-full border border-white/15 bg-white/[0.06] px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-white/[0.1] focus:outline-none focus:ring-2 focus:ring-cyan-200/40 focus:ring-offset-2 focus:ring-offset-[#0d131a]"
+            className="rounded-lg border border-[#dadce0] bg-white px-2.5 py-1.5 text-xs font-medium text-[#3c4043] hover:bg-[#f8fafc]"
             onClick={onClose}
             type="button"
           >
@@ -56,35 +54,35 @@ function EventDetailPanel({ event, onClose }: EventDetailPanelProps) {
       </div>
 
       {!event && (
-        <div className="mt-5 rounded-2xl border border-dashed border-white/15 bg-[#0d131a]/70 p-5">
-          <p className="text-sm font-semibold text-white">请选择一个日程</p>
-          <p className="mt-2 text-sm leading-6 text-slate-400">
-            在月视图或周视图中点击任意日程，可在这里查看时间、地点、分类、提醒和导出信息。
+        <div className="mt-4 rounded-xl border border-dashed border-[#dadce0] bg-[#f8fafc] p-4">
+          <p className="text-sm font-semibold text-[#202124]">请选择一个日程</p>
+          <p className="mt-2 text-xs leading-5 text-[#5f6368]">
+            在月视图、周视图或日视图中点击任意事件，可查看时间、地点、分类、提醒和 ICS 导出信息。
           </p>
         </div>
       )}
 
       {event && (
-        <div className="mt-5 space-y-4">
-          <div className="rounded-2xl border border-cyan-300/15 bg-cyan-300/[0.08] p-4 shadow-inner shadow-cyan-200/[0.02]">
+        <div className="mt-4 space-y-3">
+          <div className="rounded-xl border border-blue-100 bg-blue-50 p-4">
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
-                <p className="break-words text-lg font-semibold text-white">{event.title}</p>
-                <p className="mt-2 text-xs text-cyan-100">事件 ID #{event.id}</p>
+                <p className="break-words text-base font-semibold text-[#202124]">{event.title}</p>
+                <p className="mt-1 text-xs text-[#5f6368]">ID #{event.id}</p>
               </div>
               <ReminderBadge event={event} />
             </div>
             <button
               aria-label="导出当前日程 ICS 文件"
-              className="mt-4 w-full rounded-full border border-cyan-200/25 bg-cyan-200/10 px-4 py-2 text-xs font-semibold text-cyan-50 transition hover:border-cyan-200/40 hover:bg-cyan-200/15 focus:outline-none focus:ring-2 focus:ring-cyan-200/40 focus:ring-offset-2 focus:ring-offset-[#0d131a] disabled:cursor-not-allowed disabled:opacity-60"
+              className="mt-3 w-full rounded-lg border border-blue-200 bg-white px-3 py-2 text-xs font-semibold text-[#1a73e8] transition hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-60"
               disabled={isExporting}
               onClick={handleExportIcs}
               type="button"
             >
-              {isExporting ? 'Exporting...' : '导出 ICS'}
+              {isExporting ? '导出中...' : '导出 ICS'}
             </button>
             {exportError && (
-              <p className="mt-3 rounded-2xl border border-rose-300/20 bg-rose-300/10 p-3 text-xs leading-5 text-rose-50">
+              <p className="mt-3 rounded-lg border border-rose-200 bg-rose-50 p-3 text-xs leading-5 text-rose-700">
                 {exportError}
               </p>
             )}
@@ -93,8 +91,8 @@ function EventDetailPanel({ event, onClose }: EventDetailPanelProps) {
           <DetailRow label="开始时间" value={formatDateTime(event.startTime)} />
           <DetailRow label="结束时间" value={formatDateTime(event.endTime)} />
           <DetailRow label="地点" value={event.location || '未设置'} />
-          <div className="flex items-start justify-between gap-4 border-b border-white/10 pb-3">
-            <span className="text-xs font-semibold text-slate-500">分类</span>
+          <div className="flex items-start justify-between gap-4 border-b border-[#e5e7eb] pb-3">
+            <span className="text-xs font-semibold text-[#5f6368]">分类</span>
             <span className={`rounded-full border px-2.5 py-1 text-[11px] ${getCategoryBadgeClass(event.category)}`}>
               {getCategoryLabel(event.category)}
             </span>
@@ -102,9 +100,9 @@ function EventDetailPanel({ event, onClose }: EventDetailPanelProps) {
           <DetailRow label="提醒" value={formatReminder(event)} />
           {event.remindedAt && <DetailRow label="提醒时间" value={formatDateTime(event.remindedAt)} />}
 
-          <div className="rounded-2xl border border-white/10 bg-[#0d131a]/70 p-4">
-            <p className="text-xs font-semibold text-slate-400">描述</p>
-            <p className="mt-2 break-words text-sm leading-6 text-slate-200">
+          <div className="rounded-xl border border-[#e5e7eb] bg-[#f8fafc] p-3">
+            <p className="text-xs font-semibold text-[#5f6368]">描述</p>
+            <p className="mt-2 break-words text-sm leading-6 text-[#3c4043]">
               {event.description || '暂无描述'}
             </p>
           </div>
@@ -116,32 +114,27 @@ function EventDetailPanel({ event, onClose }: EventDetailPanelProps) {
 
 function ReminderBadge({ event }: { event: CalendarEvent }) {
   if (event.reminderMinutes === null || event.reminderMinutes === undefined) {
-    return (
-      <span className="shrink-0 rounded-full border border-white/10 bg-white/[0.06] px-2.5 py-1 text-[11px] text-slate-300">
-        无提醒
-      </span>
-    )
+    return <span className="shrink-0 rounded-full border border-slate-200 bg-white px-2.5 py-1 text-[11px] text-slate-500">无提醒</span>
   }
 
-  const isTriggered = event.reminderTriggered === true
   return (
     <span
       className={`shrink-0 rounded-full border px-2.5 py-1 text-[11px] ${
-        isTriggered
-          ? 'border-emerald-300/20 bg-emerald-300/10 text-emerald-100'
-          : 'border-amber-200/20 bg-amber-200/10 text-amber-100'
+        event.reminderTriggered
+          ? 'border-emerald-100 bg-emerald-50 text-emerald-700'
+          : 'border-amber-100 bg-amber-50 text-amber-700'
       }`}
     >
-      {isTriggered ? '已提醒' : '未提醒'}
+      {event.reminderTriggered ? '已提醒' : '未提醒'}
     </span>
   )
 }
 
 function DetailRow({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex items-start justify-between gap-4 border-b border-white/10 pb-3 last:border-b-0">
-      <span className="text-xs font-semibold text-slate-500">{label}</span>
-      <span className="text-right text-sm leading-6 text-slate-100">{value}</span>
+    <div className="flex items-start justify-between gap-4 border-b border-[#e5e7eb] pb-3 last:border-b-0">
+      <span className="text-xs font-semibold text-[#5f6368]">{label}</span>
+      <span className="text-right text-sm leading-6 text-[#3c4043]">{value}</span>
     </div>
   )
 }
@@ -158,9 +151,7 @@ function formatDateTime(value: string) {
 }
 
 function getErrorMessage(error: unknown) {
-  if (error instanceof Error) {
-    return error.message
-  }
+  if (error instanceof Error) return error.message
   return '导出 ICS 失败，请稍后重试。'
 }
 

@@ -91,7 +91,22 @@ class CalendarEventToolsTest {
                 null
         );
 
-        assertThat(result).isEqualTo("创建日程失败：结束时间必须晚于开始时间");
+        assertThat(result).contains("success=false", "结束时间必须晚于开始时间");
+        assertThat(calendarEventRepository.findAll()).isEmpty();
+    }
+
+    @Test
+    void createCalendarEvent_shouldReturnClearError_whenStartTimeIsPast() {
+        String result = calendarEventTools.createCalendarEvent(
+                "过去时间提醒",
+                "不应创建",
+                "2000-01-01T03:00:00",
+                "2000-01-01T03:30:00",
+                "线上",
+                null
+        );
+
+        assertThat(result).contains("success=false", "不能创建过去时间的日程，请选择一个未来时间。");
         assertThat(calendarEventRepository.findAll()).isEmpty();
     }
 

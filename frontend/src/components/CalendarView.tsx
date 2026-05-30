@@ -26,82 +26,81 @@ function CalendarView({
   const calendarEvents = events.map(toCalendarEvent)
 
   return (
-    <section className="h-fit self-start rounded-[32px] border border-white/10 bg-white/[0.06] p-5 shadow-2xl shadow-black/25 backdrop-blur-xl sm:p-6">
-      <div className="mb-5 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+    <section className="min-w-0 rounded-2xl border border-[#dadce0] bg-white shadow-sm">
+      <div className="flex flex-col gap-3 border-b border-[#e5e7eb] px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <p className="text-sm font-semibold text-white">日历视图</p>
-          <p className="mt-1 text-xs text-slate-400">月视图和周视图展示真实日程数据</p>
+          <p className="text-sm font-semibold text-[#202124]">日历视图</p>
+          <p className="mt-1 text-xs text-[#5f6368]">月 / 周 / 日视图展示真实日程数据</p>
         </div>
         <button
-          className="w-fit rounded-full border border-white/15 bg-white/[0.06] px-4 py-2 text-xs font-semibold text-white transition hover:bg-white/[0.1] disabled:cursor-not-allowed disabled:opacity-60"
+          className="w-fit rounded-lg border border-[#dadce0] bg-white px-3 py-2 text-xs font-medium text-[#3c4043] transition hover:bg-[#f8fafc] disabled:cursor-not-allowed disabled:opacity-60"
           disabled={isLoading}
           onClick={onRetry}
           type="button"
         >
-          {isLoading ? '刷新中...' : '刷新日历'}
+          {isLoading ? '刷新中...' : '刷新'}
         </button>
       </div>
 
-      {isUsingDemoEvents && (
-        <div className="mb-4 rounded-2xl border border-amber-200/20 bg-amber-200/10 p-4 text-sm leading-6 text-amber-50">
-          Showing demo data because the backend is unavailable.
-        </div>
-      )}
-
-      {error && (
-        <div className="mb-4 rounded-2xl border border-rose-300/20 bg-rose-300/10 p-4">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <p className="text-sm leading-6 text-rose-50">{error}</p>
-            <button
-              className="w-fit rounded-full border border-rose-200/30 bg-rose-200/10 px-3 py-1.5 text-xs font-semibold text-rose-50 transition hover:bg-rose-200/15"
-              disabled={isLoading}
-              onClick={onRetry}
-              type="button"
-            >
-              Retry
-            </button>
+      <div className="p-3 sm:p-4">
+        {isUsingDemoEvents && (
+          <div className="mb-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs leading-5 text-amber-800">
+            后端暂不可用，当前展示 demo fallback 数据。
           </div>
-        </div>
-      )}
+        )}
 
-      {isLoading ? (
-        <div className="rounded-3xl border border-white/10 bg-[#0d131a]/70 p-5">
-          <div className="mb-5 h-8 w-2/5 animate-pulse rounded-full bg-white/15" />
-          <div className="grid grid-cols-7 gap-2">
-            {Array.from({ length: 35 }, (_, index) => (
-              <div
-                className="aspect-square animate-pulse rounded-2xl bg-white/[0.06]"
-                key={index}
-              />
-            ))}
-          </div>
-        </div>
-      ) : (
-        <div className="voicecal-calendar rounded-3xl border border-white/10 bg-[#0d131a]/80 p-3 sm:p-4">
-          <FullCalendar
-            allDaySlot={false}
-            dayMaxEvents={3}
-            eventClick={handleEventClick(onEventSelect)}
-            events={calendarEvents}
-            headerToolbar={{
-              left: 'prev,next today',
-              center: 'title',
-              right: 'dayGridMonth,timeGridWeek,timeGridDay',
-            }}
-            height="auto"
-            initialView="dayGridMonth"
-            locale="zh-cn"
-            nowIndicator
-            plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
-            slotMinTime="07:00:00"
-          />
-          {events.length === 0 && (
-            <div className="mt-4 rounded-2xl border border-dashed border-white/15 bg-white/[0.04] p-5 text-sm leading-6 text-slate-400">
-              No events yet. Ask VoiceCal to create one or use the calendar API.
+        {error && (
+          <div className="mb-3 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs leading-5 text-rose-700">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+              <span>{error}</span>
+              <button
+                className="w-fit rounded-md border border-rose-200 bg-white px-2 py-1 font-medium text-rose-700"
+                disabled={isLoading}
+                onClick={onRetry}
+                type="button"
+              >
+                重试
+              </button>
             </div>
-          )}
-        </div>
-      )}
+          </div>
+        )}
+
+        {isLoading ? (
+          <div className="rounded-xl border border-[#e5e7eb] bg-white p-4">
+            <div className="mb-4 h-8 w-40 animate-pulse rounded-full bg-slate-100" />
+            <div className="grid grid-cols-7 gap-px overflow-hidden rounded-lg border border-[#e5e7eb] bg-[#e5e7eb]">
+              {Array.from({ length: 35 }, (_, index) => (
+                <div className="aspect-square animate-pulse bg-white" key={index} />
+              ))}
+            </div>
+          </div>
+        ) : (
+          <div className="voicecal-calendar">
+            <FullCalendar
+              allDaySlot={false}
+              dayMaxEvents={3}
+              eventClick={handleEventClick(onEventSelect)}
+              events={calendarEvents}
+              headerToolbar={{
+                left: 'prev,next today',
+                center: 'title',
+                right: 'dayGridMonth,timeGridWeek,timeGridDay',
+              }}
+              height="auto"
+              initialView="dayGridMonth"
+              locale="zh-cn"
+              nowIndicator
+              plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
+              slotMinTime="07:00:00"
+            />
+            {events.length === 0 && (
+              <div className="mt-3 rounded-xl border border-dashed border-[#dadce0] bg-[#f8fafc] p-4 text-sm text-[#5f6368]">
+                暂无日程，试试用语音创建一个。
+              </div>
+            )}
+          </div>
+        )}
+      </div>
     </section>
   )
 }
@@ -113,9 +112,9 @@ function toCalendarEvent(event: CalendarEvent): EventInput {
     title: `[${getCategoryLabel(event.category)}] ${event.title}`,
     start: event.startTime,
     end: event.endTime,
-    backgroundColor: event.reminderTriggered ? '#059669' : categoryColor.backgroundColor,
-    borderColor: event.reminderTriggered ? '#6ee7b7' : categoryColor.borderColor,
-    textColor: '#ecfeff',
+    backgroundColor: event.reminderTriggered ? '#e6f4ea' : categoryColor.backgroundColor,
+    borderColor: event.reminderTriggered ? '#34a853' : categoryColor.borderColor,
+    textColor: event.reminderTriggered ? '#137333' : categoryColor.textColor,
     extendedProps: {
       description: event.description,
       location: event.location,

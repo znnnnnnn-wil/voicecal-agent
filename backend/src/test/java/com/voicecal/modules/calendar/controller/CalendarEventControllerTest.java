@@ -5,12 +5,16 @@ import com.voicecal.common.enums.dao.EventCategory;
 import com.voicecal.common.enums.dao.EventStatus;
 import com.voicecal.dao.entity.CalendarEvent;
 import com.voicecal.dao.repository.CalendarEventRepository;
+import java.time.Clock;
+import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.HashMap;
 import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
@@ -20,6 +24,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.nullValue;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -46,8 +51,13 @@ class CalendarEventControllerTest {
     @Autowired
     private CalendarEventRepository calendarEventRepository;
 
+    @MockBean
+    private Clock clock;
+
     @BeforeEach
     void setUp() {
+        when(clock.instant()).thenReturn(Instant.parse("2026-05-28T09:00:00Z"));
+        when(clock.getZone()).thenReturn(ZoneId.of("Asia/Shanghai"));
         calendarEventRepository.deleteAll();
         calendarEventRepository.flush();
     }
@@ -78,6 +88,44 @@ class CalendarEventControllerTest {
         assertThat(savedEvent.getTitle()).isEqualTo("测试会议");
         assertThat(savedEvent.getDescription()).isEqualTo("PR4 测试");
         assertThat(savedEvent.getLocation()).isEqualTo("线上");
+    }
+
+    @Test
+    void createEvent_shouldRejectPastStartTime() throws Exception {
+        Map<String, Object> request = validRequest(
+                "提交项目代码",
+                "过去时间提醒",
+                "2026-05-28T16:00:00",
+                "2026-05-28T16:30:00",
+                "线上"
+        );
+
+        mockMvc.perform(post("/api/calendar/events")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("不能创建过去时间的日程，请选择一个未来时间。"));
+
+        assertThat(calendarEventRepository.findAll()).isEmpty();
+    }
+
+    @Test
+    void createEvent_shouldRejectTodayThreeAm_whenCurrentTimeIsFivePm() throws Exception {
+        Map<String, Object> request = validRequest(
+                "提交项目代码",
+                "今天上午三点提醒",
+                "2026-05-28T03:00:00",
+                "2026-05-28T03:30:00",
+                "线上"
+        );
+
+        mockMvc.perform(post("/api/calendar/events")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("不能创建过去时间的日程，请选择一个未来时间。"));
+
+        assertThat(calendarEventRepository.findAll()).isEmpty();
     }
 
     @Test

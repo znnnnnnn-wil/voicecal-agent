@@ -15,6 +15,7 @@ import com.voicecal.modules.calendar.entity.response.ConflictCheckResponse;
 import com.voicecal.modules.calendar.service.CalendarAvailabilityService;
 import com.voicecal.modules.calendar.service.CalendarEventCategoryResolver;
 import com.voicecal.modules.calendar.service.CalendarEventService;
+import java.time.Clock;
 import java.time.LocalDateTime;
 import java.util.List;
 import org.springframework.stereotype.Service;
@@ -29,15 +30,18 @@ public class CalendarEventServiceImpl implements CalendarEventService {
     private final CalendarEventRepository calendarEventRepository;
     private final CalendarAvailabilityService calendarAvailabilityService;
     private final CalendarEventCategoryResolver categoryResolver;
+    private final Clock clock;
 
     public CalendarEventServiceImpl(
             CalendarEventRepository calendarEventRepository,
             CalendarAvailabilityService calendarAvailabilityService,
-            CalendarEventCategoryResolver categoryResolver
+            CalendarEventCategoryResolver categoryResolver,
+            Clock clock
     ) {
         this.calendarEventRepository = calendarEventRepository;
         this.calendarAvailabilityService = calendarAvailabilityService;
         this.categoryResolver = categoryResolver;
+        this.clock = clock;
     }
 
     /**
@@ -50,6 +54,7 @@ public class CalendarEventServiceImpl implements CalendarEventService {
     @Transactional
     public CalendarEventResponse createEvent(CalendarEventCreateRequest request) {
         validateTimeRange(request.startTime(), request.endTime());
+        validateStartTimeNotPast(request.startTime());
         validateReminderMinutes(request.reminderMinutes());
         ensureNoConflicts(request.startTime(), request.endTime(), null);
 
@@ -164,6 +169,15 @@ public class CalendarEventServiceImpl implements CalendarEventService {
         }
         if (!endTime.isAfter(startTime)) {
             throw CustomException.create(ResultCodeEnum.PARAMS_ERROR, "结束时间必须晚于开始时间");
+        }
+    }
+
+    private void validateStartTimeNotPast(LocalDateTime startTime) {
+        if (startTime == null) {
+            return;
+        }
+        if (startTime.isBefore(LocalDateTime.now(clock))) {
+            throw CustomException.create(ResultCodeEnum.PARAMS_ERROR, "不能创建过去时间的日程，请选择一个未来时间。");
         }
     }
 

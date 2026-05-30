@@ -6,53 +6,38 @@ type AiReplyPanelProps = {
 }
 
 const stateMeta = {
-  empty: {
-    label: '空状态',
-    className: 'border-slate-300/15 bg-slate-300/10 text-slate-200',
-  },
-  idle: {
-    label: '待命',
-    className: 'border-cyan-300/20 bg-cyan-300/10 text-cyan-100',
-  },
-  loading: {
-    label: '请求中',
-    className: 'border-amber-200/20 bg-amber-200/10 text-amber-100',
-  },
-  success: {
-    label: '已完成',
-    className: 'border-emerald-300/20 bg-emerald-300/10 text-emerald-100',
-  },
-  error: {
-    label: '需输入',
-    className: 'border-rose-300/20 bg-rose-300/10 text-rose-100',
-  },
+  empty: { label: '空状态', className: 'border-slate-200 bg-slate-50 text-slate-600' },
+  idle: { label: '待命', className: 'border-blue-100 bg-blue-50 text-blue-700' },
+  loading: { label: '请求中', className: 'border-amber-100 bg-amber-50 text-amber-700' },
+  success: { label: '已完成', className: 'border-emerald-100 bg-emerald-50 text-emerald-700' },
+  error: { label: '需处理', className: 'border-rose-100 bg-rose-50 text-rose-700' },
 }
 
 function AiReplyPanel({ reply, state }: AiReplyPanelProps) {
   const meta = stateMeta[state]
 
   return (
-    <section className="h-fit self-start rounded-[28px] border border-white/10 bg-white/[0.06] p-5 shadow-2xl shadow-black/25 backdrop-blur-xl">
-      <div className="flex items-center justify-between gap-4">
+    <section className="rounded-2xl border border-[#dadce0] bg-white p-4 shadow-sm">
+      <div className="flex items-center justify-between gap-3">
         <div>
-          <p className="text-sm font-semibold text-white">AI 回复</p>
-          <p className="mt-1 text-xs text-slate-400">本地 mock 结果</p>
+          <p className="text-sm font-semibold text-[#202124]">AI 助手回复</p>
+          <p className="mt-1 text-xs text-[#5f6368]">最近一次日程指令结果</p>
         </div>
-        <span className={`rounded-full border px-3 py-1 text-xs font-medium ${meta.className}`}>
+        <span className={`rounded-full border px-2.5 py-1 text-xs font-medium ${meta.className}`}>
           {meta.label}
         </span>
       </div>
 
-      <div className="mt-5 min-h-36 rounded-3xl border border-white/10 bg-[#0d131a]/70 p-5">
+      <div className="mt-4 min-h-32 rounded-xl border border-blue-100 bg-blue-50/70 p-4">
         {state === 'loading' ? (
           <div className="space-y-3">
-            <div className="h-3 w-4/5 animate-pulse rounded-full bg-white/15" />
-            <div className="h-3 w-2/3 animate-pulse rounded-full bg-white/10" />
-            <div className="h-3 w-1/2 animate-pulse rounded-full bg-white/10" />
-            <p className="pt-2 text-xs text-slate-500">正在等待后端 AI 接口响应...</p>
+            <div className="h-3 w-4/5 animate-pulse rounded-full bg-blue-100" />
+            <div className="h-3 w-2/3 animate-pulse rounded-full bg-blue-100/80" />
+            <div className="h-3 w-1/2 animate-pulse rounded-full bg-blue-100/70" />
+            <p className="pt-1 text-xs text-[#5f6368]">正在等待后端 AI 接口响应...</p>
           </div>
         ) : (
-          <p className="text-sm leading-7 text-slate-200">{reply}</p>
+          <p className="whitespace-pre-wrap text-sm leading-7 text-[#174ea6]">{reply}</p>
         )}
       </div>
     </section>
