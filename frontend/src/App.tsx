@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import AiReplyPanel, { type ReplyState } from './components/AiReplyPanel'
 import AppShell from './components/AppShell'
 import CalendarView from './components/CalendarView'
@@ -6,7 +6,6 @@ import DailySummaryCard from './components/DailySummaryCard'
 import EventDetailPanel from './components/EventDetailPanel'
 import OperationLog from './components/OperationLog'
 import RecentReminders from './components/RecentReminders'
-import StatusPreview from './components/StatusPreview'
 import TodaySchedule from './components/TodaySchedule'
 import TopNav from './components/TopNav'
 import VoiceAssistantCard from './components/VoiceAssistantCard'
@@ -31,8 +30,6 @@ import type { CalendarEvent } from './types/calendar'
 import type { VoiceCommandLog } from './types/log'
 import type { Reminder } from './types/reminder'
 
-type FeedbackState = 'idle' | 'loading' | 'success' | 'error'
-
 const initialReply =
   '我可以帮你创建、查询、整理日程，也可以处理提醒、冲突检测、空闲时间查询和 ICS 导出。'
 
@@ -53,7 +50,6 @@ function App() {
   const [remindersError, setRemindersError] = useState<string | null>(null)
   const [reply, setReply] = useState(initialReply)
   const [replyState, setReplyState] = useState<ReplyState>('idle')
-  const [feedback, setFeedback] = useState<FeedbackState>('idle')
   const [isCalendarLoading, setIsCalendarLoading] = useState(false)
   const [isTodayLoading, setIsTodayLoading] = useState(false)
   const [isWeekLoading, setIsWeekLoading] = useState(false)
@@ -68,6 +64,7 @@ function App() {
   const [isUsingDemoReminders, setIsUsingDemoReminders] = useState(false)
   const [logs, setLogs] = useState<VoiceCommandLog[]>([])
   const [recentReminders, setRecentReminders] = useState<Reminder[]>([])
+  const lastSubmitRef = useRef<{ text: string; time: number } | null>(null)
 
   const appendLog = useCallback((item: Omit<OperationLogItem, 'time'>) => {
     void item
@@ -195,9 +192,12 @@ function App() {
 
   const handleRunCommand = async (nextCommand?: string) => {
     const commandText = (nextCommand ?? command).trim()
+    const now = Date.now()
+    if (lastSubmitRef.current?.text === commandText && now - lastSubmitRef.current.time < 3_000) {
+      return
+    }
     if (!commandText) {
       setReplyState('error')
-      setFeedback('error')
       setChatSuccess(false)
       setChatError('请输入日程指令后再发送。')
       setReply('我还没有收到有效指令。请先输入会议主题、时间或想整理的日程内容。')
@@ -205,14 +205,14 @@ function App() {
     }
 
     setReplyState('loading')
-    setFeedback('loading')
     setChatError(null)
     setChatSuccess(false)
+    lastSubmitRef.current = { text: commandText, time: now }
+    const chatStartedAt = Date.now()
 
     try {
       const response = await chatWithAi(commandText)
       setReplyState('success')
-      setFeedback('success')
       setChatSuccess(true)
       setReply(response.reply)
       await Promise.all([
@@ -223,23 +223,14 @@ function App() {
         loadVoiceCommandLogs(),
         loadRecentReminders(),
       ])
+      appendAssistantLog('AI command completed', `Chat ${Date.now() - chatStartedAt}ms`, 'success')
     } catch (error) {
       const message = getErrorMessage(error)
       setReplyState('error')
-      setFeedback('error')
       setChatError(message)
       setReply(`AI 请求失败：${message}`)
     }
   }
-
-  const dashboardError = calendarError || todayError || weekError || summaryError || logsError || remindersError
-  const isUsingAnyDemoData =
-    isUsingDemoCalendar ||
-    isUsingDemoToday ||
-    isUsingDemoWeek ||
-    isUsingDemoSummary ||
-    isUsingDemoLogs ||
-    isUsingDemoReminders
 
   return (
     <AppShell>
@@ -301,6 +292,7 @@ function App() {
             reminders={recentReminders}
           />
           <WeekSummary
+            error={weekError}
             events={weekEvents}
             isLoading={isWeekLoading}
             isUsingDemoEvents={isUsingDemoWeek}
@@ -311,12 +303,6 @@ function App() {
             isUsingDemoSummary={isUsingDemoSummary}
             onRetry={loadDailySummary}
             summary={dailySummary}
-          />
-          <StatusPreview
-            chatError={chatError}
-            eventsError={dashboardError}
-            feedback={feedback}
-            isUsingDemoEvents={isUsingAnyDemoData}
           />
         </aside>
       </main>
