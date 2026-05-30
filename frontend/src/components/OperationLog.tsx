@@ -59,11 +59,11 @@ function OperationLog({ error, isLoading, isUsingDemoLogs, logs, onRetry }: Oper
               <div className="flex gap-3">
                 <span className={`mt-1 size-2.5 shrink-0 rounded-full ${log.success ? 'bg-emerald-500' : 'bg-rose-500'}`} />
                 <div className="min-w-0 flex-1">
-                  <div className="flex items-center justify-between gap-3">
-                    <p className="min-w-0 truncate text-sm font-semibold text-[#202124]">{log.rawText}</p>
+                  <div className="flex items-start justify-between gap-3">
+                    <p className="min-w-0 whitespace-pre-wrap break-words text-sm font-semibold leading-5 text-[#202124]">{log.rawText}</p>
                     <span className="shrink-0 text-[11px] text-[#5f6368]">{formatDateTime(log.createdAt)}</span>
                   </div>
-                  <p className="mt-1 line-clamp-2 break-words text-xs leading-5 text-[#5f6368]">
+                  <p className="mt-2 max-h-32 overflow-y-auto whitespace-pre-wrap break-words rounded-lg bg-white/70 px-2 py-1.5 text-xs leading-5 text-[#5f6368]">
                     {log.assistantReply || '暂无 AI 回复'}
                   </p>
                 </div>

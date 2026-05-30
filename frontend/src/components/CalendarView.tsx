@@ -16,6 +16,10 @@ type CalendarViewProps = {
   onRetry: () => void
 }
 
+const TIME_GRID_START = '06:00:00'
+const TIME_GRID_END = '30:00:00'
+const TIME_GRID_INITIAL_SCROLL = '07:00:00'
+
 function CalendarView({
   error,
   events,
@@ -119,8 +123,10 @@ function CalendarView({
               locale="zh-cn"
               nowIndicator
               plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
-              slotMaxTime="24:00:00"
-              slotMinTime="00:00:00"
+              scrollTime={TIME_GRID_INITIAL_SCROLL}
+              scrollTimeReset={false}
+              slotMaxTime={TIME_GRID_END}
+              slotMinTime={TIME_GRID_START}
             />
             {events.length === 0 && (
               <div className="mt-3 rounded-xl border border-dashed border-[#dadce0] bg-[#f8fafc] p-4 text-sm text-[#5f6368]">
