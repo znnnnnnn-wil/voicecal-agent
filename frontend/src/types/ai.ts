@@ -16,6 +16,10 @@ export type AiChatResponse = {
   reply: string
 }
 
+export type SpeechTranscriptionResponse = {
+  text: string
+}
+
 export type DailySummary = {
   date: string
   timezone: string
