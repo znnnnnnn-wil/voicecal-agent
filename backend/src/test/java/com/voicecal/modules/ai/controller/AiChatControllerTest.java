@@ -24,7 +24,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ActiveProfiles("h2")
 @AutoConfigureMockMvc
 @SpringBootTest(properties = {
-        "spring.jpa.hibernate.ddl-auto=create-drop"
+        "spring.jpa.hibernate.ddl-auto=create-drop",
+        "voicecal.ai.qwen.api-key="
 })
 class AiChatControllerTest {
 
