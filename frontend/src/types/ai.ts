@@ -14,10 +14,15 @@ export type AiChatRequest = {
 
 export type AiChatResponse = {
   reply: string
+  routedBy?: string
 }
 
 export type SpeechTranscriptionResponse = {
   text: string
+  model?: string
+  durationMs?: number
+  success?: boolean
+  message?: string
 }
 
 export type DailySummary = {
