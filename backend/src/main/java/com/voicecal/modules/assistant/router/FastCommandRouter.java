@@ -28,10 +28,6 @@ public class FastCommandRouter {
         if (containsAny(normalized, "本周日程", "这周有什么安排", "我这周有什么安排", "这周有哪些会议")) {
             return FastCommandRouteResult.matched(FastCommandType.WEEK_EVENTS);
         }
-        if (normalized.contains("有空吗")
-                && containsAny(normalized, "今天", "明天", "今晚", "晚上", "下午", "周五", "星期五")) {
-            return FastCommandRouteResult.matched(FastCommandType.FREE_TIME);
-        }
         return FastCommandRouteResult.notMatched();
     }
 
