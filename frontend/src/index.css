@@ -2,10 +2,11 @@
 @source "./";
 
 :root {
-  color-scheme: dark;
+  color-scheme: light;
   font-family:
     Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  background: #090d12;
+  background: #f6f8fb;
+  color: #202124;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -24,7 +25,7 @@ body {
   min-width: 320px;
   min-height: 100vh;
   margin: 0;
-  background: #070b10;
+  background: #f6f8fb;
 }
 
 button {
@@ -32,13 +33,13 @@ button {
 }
 
 :focus-visible {
-  outline: 2px solid rgba(103, 232, 249, 0.7);
-  outline-offset: 3px;
+  outline: 2px solid rgba(26, 115, 232, 0.55);
+  outline-offset: 2px;
 }
 
 ::selection {
-  color: #061015;
-  background: #67e8f9;
+  color: #174ea6;
+  background: #d2e3fc;
 }
 
 ::-webkit-scrollbar {
@@ -46,22 +47,22 @@ button {
 }
 
 ::-webkit-scrollbar-thumb {
-  border: 3px solid #090d12;
+  border: 3px solid #f6f8fb;
   border-radius: 999px;
-  background: rgba(148, 163, 184, 0.45);
+  background: #cbd5e1;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(203, 213, 225, 0.62);
+  background: #94a3b8;
 }
 
 .voicecal-calendar {
-  --fc-border-color: rgba(255, 255, 255, 0.1);
-  --fc-page-bg-color: transparent;
-  --fc-neutral-bg-color: rgba(255, 255, 255, 0.05);
-  --fc-list-event-hover-bg-color: rgba(103, 232, 249, 0.08);
-  --fc-today-bg-color: rgba(34, 211, 238, 0.1);
-  color: #e2e8f0;
+  --fc-border-color: #e5e7eb;
+  --fc-page-bg-color: #ffffff;
+  --fc-neutral-bg-color: #f8fafc;
+  --fc-list-event-hover-bg-color: #f8fafc;
+  --fc-today-bg-color: #e8f0fe;
+  color: #202124;
 }
 
 .voicecal-calendar .fc {
@@ -69,122 +70,146 @@ button {
 }
 
 .voicecal-calendar .fc-view-harness {
-  min-height: 520px;
+  min-height: 720px;
 }
 
 .voicecal-calendar .fc-toolbar {
-  align-items: flex-start;
+  align-items: center;
   gap: 12px;
-  margin-bottom: 18px;
+  margin-bottom: 14px;
 }
 
 .voicecal-calendar .fc-toolbar-title {
-  color: #f8fafc;
+  color: #202124;
   font-size: 20px;
-  font-weight: 700;
+  font-weight: 500;
   letter-spacing: 0;
 }
 
 .voicecal-calendar .fc-button {
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid #dadce0;
+  border-radius: 8px;
+  background: #ffffff;
   box-shadow: none;
-  color: #f8fafc;
+  color: #3c4043;
   font-size: 12px;
-  font-weight: 700;
-  padding: 8px 12px;
+  font-weight: 500;
+  padding: 7px 12px;
   text-transform: none;
   transition:
-    background 160ms ease,
-    border-color 160ms ease,
-    transform 160ms ease;
+    background 140ms ease,
+    border-color 140ms ease,
+    color 140ms ease;
 }
 
 .voicecal-calendar .fc-button:hover,
 .voicecal-calendar .fc-button:focus {
-  border-color: rgba(103, 232, 249, 0.35);
-  background: rgba(34, 211, 238, 0.14);
+  border-color: #cbd5e1;
+  background: #f8fafc;
   box-shadow: none;
-  transform: translateY(-1px);
+  color: #202124;
 }
 
 .voicecal-calendar .fc-button-primary:not(:disabled).fc-button-active,
 .voicecal-calendar .fc-button-primary:not(:disabled):active {
-  border-color: rgba(103, 232, 249, 0.45);
-  background: rgba(103, 232, 249, 0.2);
-  color: #ecfeff;
+  border-color: #d2e3fc;
+  background: #e8f0fe;
+  color: #174ea6;
 }
 
-.voicecal-calendar .fc-scrollgrid,
+.voicecal-calendar .fc-scrollgrid {
+  overflow: hidden;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+}
+
 .voicecal-calendar .fc-theme-standard td,
 .voicecal-calendar .fc-theme-standard th {
-  border-color: rgba(255, 255, 255, 0.1);
+  border-color: #e5e7eb;
 }
 
 .voicecal-calendar .fc-col-header-cell {
   padding: 10px 0;
-  background: rgba(255, 255, 255, 0.04);
+  background: #ffffff;
 }
 
 .voicecal-calendar .fc-col-header-cell-cushion {
-  color: #94a3b8;
+  color: #5f6368;
   font-size: 12px;
-  font-weight: 700;
+  font-weight: 600;
   text-decoration: none;
 }
 
 .voicecal-calendar .fc-daygrid-day-number {
-  color: #cbd5e1;
+  margin: 6px;
+  color: #3c4043;
   font-size: 12px;
-  font-weight: 700;
+  font-weight: 500;
   text-decoration: none;
 }
 
+.voicecal-calendar .fc-day-today .fc-daygrid-day-number {
+  display: grid;
+  min-width: 24px;
+  height: 24px;
+  place-items: center;
+  border-radius: 999px;
+  background: #1a73e8;
+  color: #ffffff;
+}
+
 .voicecal-calendar .fc-day-other .fc-daygrid-day-number {
-  color: #475569;
+  color: #9aa0a6;
 }
 
 .voicecal-calendar .fc-daygrid-day-frame {
-  min-height: 104px;
-  padding: 4px;
+  min-height: 118px;
+  padding: 2px;
 }
 
 .voicecal-calendar .fc-event {
-  border-radius: 10px;
-  box-shadow: 0 12px 24px rgba(8, 47, 73, 0.22);
+  border-width: 0 0 0 3px;
+  border-radius: 6px;
+  box-shadow: none;
   cursor: pointer;
   overflow: hidden;
-  padding: 1px 3px;
+  padding: 2px 5px;
 }
 
 .voicecal-calendar .fc-event:hover {
-  filter: brightness(1.08);
+  filter: brightness(0.98);
 }
 
 .voicecal-calendar .fc-event-title,
 .voicecal-calendar .fc-event-time {
   font-size: 12px;
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .voicecal-calendar .fc-timegrid-slot-label,
 .voicecal-calendar .fc-timegrid-axis-cushion {
-  color: #64748b;
+  color: #5f6368;
   font-size: 11px;
 }
 
 .voicecal-calendar .fc-timegrid-now-indicator-line {
-  border-color: #fb7185;
+  border-color: #ea4335;
 }
 
 .voicecal-calendar .fc-timegrid-now-indicator-arrow {
-  border-color: #fb7185;
-  color: #fb7185;
+  border-color: #ea4335;
+  color: #ea4335;
+}
+
+@media (max-width: 1366px) {
+  .voicecal-calendar .fc-view-harness {
+    min-height: 640px;
+  }
 }
 
 @media (max-width: 720px) {
   .voicecal-calendar .fc-toolbar {
+    align-items: flex-start;
     flex-direction: column;
   }
 
