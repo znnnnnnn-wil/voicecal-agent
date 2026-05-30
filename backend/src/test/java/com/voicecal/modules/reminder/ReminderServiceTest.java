@@ -106,6 +106,30 @@ class ReminderServiceTest {
         assertThat(savedEvent.getRemindedAt()).isNull();
     }
 
+    @Test
+    void triggerDueReminders_shouldTriggerZeroMinuteReminder_whenEventJustStarted() {
+        CalendarEvent event = calendarEventRepository.saveAndFlush(createEvent("到点提醒", NOW.minusMinutes(1), 0));
+
+        int count = reminderService.triggerDueReminders();
+
+        CalendarEvent savedEvent = calendarEventRepository.findById(event.getId()).orElseThrow();
+        assertThat(count).isEqualTo(1);
+        assertThat(savedEvent.getReminderTriggered()).isTrue();
+        assertThat(savedEvent.getRemindedAt()).isEqualTo(NOW);
+    }
+
+    @Test
+    void triggerDueReminders_shouldNotTriggerZeroMinuteReminder_whenGraceWindowExpired() {
+        CalendarEvent event = calendarEventRepository.saveAndFlush(createEvent("过期到点提醒", NOW.minusMinutes(6), 0));
+
+        int count = reminderService.triggerDueReminders();
+
+        CalendarEvent savedEvent = calendarEventRepository.findById(event.getId()).orElseThrow();
+        assertThat(count).isZero();
+        assertThat(savedEvent.getReminderTriggered()).isFalse();
+        assertThat(savedEvent.getRemindedAt()).isNull();
+    }
+
     private CalendarEvent createEvent(String title, LocalDateTime startTime, Integer reminderMinutes) {
         CalendarEvent event = new CalendarEvent();
         event.setTitle(title);

@@ -258,19 +258,41 @@ class CalendarEventControllerTest {
     }
 
     @Test
-    void createEvent_shouldReturnBadRequest_whenEndTimeIsNotAfterStartTime() throws Exception {
+    void createEvent_shouldCreatePointInTimeEvent_whenEndTimeEqualsStartTime() throws Exception {
+        Map<String, Object> request = new HashMap<>(validRequest(
+                "起床",
+                "时间点事项",
+                "2026-05-29T10:00:00",
+                "2026-05-29T10:00:00",
+                "线上"
+        ));
+        request.put("reminderMinutes", 0);
+
+        mockMvc.perform(post("/api/calendar/events")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.title").value("起床"))
+                .andExpect(jsonPath("$.data.startTime").value("2026-05-29T10:00:00"))
+                .andExpect(jsonPath("$.data.endTime").value("2026-05-29T10:00:00"))
+                .andExpect(jsonPath("$.data.reminderMinutes").value(0));
+    }
+
+    @Test
+    void createEvent_shouldReturnBadRequest_whenEndTimeIsBeforeStartTime() throws Exception {
         Map<String, Object> request = validRequest(
                 "无效时间会议",
-                "结束时间不晚于开始时间",
+                "结束时间早于开始时间",
                 "2026-05-29T10:00:00",
-                "2026-05-29T10:00:00",
+                "2026-05-29T09:00:00",
                 "线上"
         );
 
         mockMvc.perform(post("/api/calendar/events")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("结束时间不能早于开始时间"));
     }
 
     @Test
