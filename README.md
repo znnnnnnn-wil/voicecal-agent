@@ -113,6 +113,17 @@ npm run build
 AI provider is not configured yet. VoiceCal calendar tools are registered and ready for use when a chat model is configured.
 ```
 
+如需启用 Qwen 模型，在本地 shell 中配置环境变量后启动后端：
+
+```powershell
+$env:DASHSCOPE_API_KEY="your-api-key"
+$env:QWEN_MODEL_NAME="qwen3.7-max"
+mvn.cmd -f backend\pom.xml spring-boot:run
+```
+
+默认使用 DashScope OpenAI 兼容地址 `https://dashscope.aliyuncs.com/compatible-mode/v1`。
+如需覆盖，可设置 `QWEN_BASE_URL`。不要把真实 API Key 写入代码、配置文件、`.env` 或提交记录。
+
 本项目不要求提交任何 API Key。接入真实模型时应通过本地环境变量或私有配置完成，并确保不把 key、token、secret 写入仓库。
 
 ## 核心 API 摘要

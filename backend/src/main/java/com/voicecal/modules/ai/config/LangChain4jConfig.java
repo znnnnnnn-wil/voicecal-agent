@@ -4,7 +4,7 @@ import com.voicecal.modules.ai.service.VoiceCalAssistant;
 import com.voicecal.modules.ai.tool.CalendarEventTools;
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.service.AiServices;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -22,7 +22,7 @@ public class LangChain4jConfig {
      * @return VoiceCal Assistant
      */
     @Bean
-    @ConditionalOnBean(ChatModel.class)
+    @ConditionalOnExpression("'${voicecal.ai.qwen.api-key:}'.trim().length() > 0")
     public VoiceCalAssistant voiceCalAssistant(ChatModel chatModel, CalendarEventTools calendarEventTools) {
         return AiServices.builder(VoiceCalAssistant.class)
                 .chatModel(chatModel)
