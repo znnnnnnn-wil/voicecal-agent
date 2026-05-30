@@ -20,6 +20,7 @@ public class ReminderServiceImpl implements ReminderService {
 
     private static final int DEFAULT_LIMIT = 20;
     private static final int MAX_LIMIT = 100;
+    private static final int DUE_REMINDER_GRACE_MINUTES = 5;
 
     private final CalendarEventRepository calendarEventRepository;
     private final Clock clock;
@@ -38,10 +39,11 @@ public class ReminderServiceImpl implements ReminderService {
     @Transactional
     public int triggerDueReminders() {
         LocalDateTime now = LocalDateTime.now(clock);
+        LocalDateTime earliestCandidateStartTime = now.minusMinutes(DUE_REMINDER_GRACE_MINUTES);
         List<CalendarEvent> candidates =
                 calendarEventRepository.findByStatusAndReminderMinutesIsNotNullAndReminderTriggeredFalseAndStartTimeAfterOrderByStartTimeAsc(
                         EventStatus.ACTIVE,
-                        now
+                        earliestCandidateStartTime
                 );
 
         int triggeredCount = 0;
@@ -82,6 +84,10 @@ public class ReminderServiceImpl implements ReminderService {
         }
 
         LocalDateTime reminderTime = event.getStartTime().minusMinutes(reminderMinutes);
+        if (reminderMinutes == 0) {
+            LocalDateTime latestTriggerTime = event.getStartTime().plusMinutes(DUE_REMINDER_GRACE_MINUTES);
+            return !now.isBefore(reminderTime) && !now.isAfter(latestTriggerTime);
+        }
         return !now.isBefore(reminderTime) && now.isBefore(event.getStartTime());
     }
 

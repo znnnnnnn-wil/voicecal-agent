@@ -40,4 +40,11 @@ class FastCommandRouterTest {
 
         assertThat(result.matched()).isFalse();
     }
+
+    @Test
+    void tryRoute_shouldNotHandleFreeTimeCommand() {
+        FastCommandRouteResult result = fastCommandRouter.tryRoute("帮我查下周五下午有空吗？");
+
+        assertThat(result.matched()).isFalse();
+    }
 }

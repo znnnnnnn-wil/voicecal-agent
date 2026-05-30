@@ -63,6 +63,7 @@ function VoiceAssistantCard({
   const { isSupported: isSpeechSupported, speak } = useSpeechSynthesis()
   const [lastSpokenReply, setLastSpokenReply] = useState('')
   const [lastSubmittedTranscript, setLastSubmittedTranscript] = useState('')
+  const [lastAppliedTranscript, setLastAppliedTranscript] = useState('')
 
   const status = useMemo<AssistantStatus>(() => {
     if (isLoading) return 'sending'
@@ -74,16 +75,17 @@ function VoiceAssistantCard({
   const meta = statusMeta[status]
 
   useEffect(() => {
-    if (!transcript) {
+    if (!transcript || transcript === lastAppliedTranscript) {
       return
     }
+    setLastAppliedTranscript(transcript)
     onCommandChange(transcript)
     onLog('Voice transcript captured', transcript, 'success')
     if (autoSendAfterTranscription && transcript !== lastSubmittedTranscript && !isLoading) {
       setLastSubmittedTranscript(transcript)
       onRunCommand(transcript)
     }
-  }, [isLoading, lastSubmittedTranscript, onCommandChange, onLog, onRunCommand, transcript])
+  }, [isLoading, lastAppliedTranscript, lastSubmittedTranscript, onCommandChange, onLog, onRunCommand, transcript])
 
   useEffect(() => {
     if (isSuccess && reply && isSpeechSupported && reply !== lastSpokenReply) {
@@ -100,6 +102,7 @@ function VoiceAssistantCard({
     }
     resetTranscript()
     setLastSubmittedTranscript('')
+    setLastAppliedTranscript('')
     onLog('Voice recording started', 'Recording audio with VAD', 'info')
     startListening()
   }
@@ -179,6 +182,8 @@ function VoiceAssistantCard({
           className="rounded-lg border border-[#dadce0] bg-white px-3 py-2.5 text-sm font-medium text-[#3c4043] transition hover:bg-[#f8fafc]"
           onClick={() => {
             resetTranscript()
+            setLastAppliedTranscript('')
+            setLastSubmittedTranscript('')
             onCommandChange('')
           }}
           type="button"

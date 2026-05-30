@@ -167,8 +167,8 @@ public class CalendarEventServiceImpl implements CalendarEventService {
         if (startTime == null || endTime == null) {
             return;
         }
-        if (!endTime.isAfter(startTime)) {
-            throw CustomException.create(ResultCodeEnum.PARAMS_ERROR, "结束时间必须晚于开始时间");
+        if (endTime.isBefore(startTime)) {
+            throw CustomException.create(ResultCodeEnum.PARAMS_ERROR, "结束时间不能早于开始时间");
         }
     }
 
@@ -188,6 +188,9 @@ public class CalendarEventServiceImpl implements CalendarEventService {
     }
 
     private void ensureNoConflicts(LocalDateTime startTime, LocalDateTime endTime, Long excludeEventId) {
+        if (startTime != null && startTime.equals(endTime)) {
+            return;
+        }
         ConflictCheckResponse response = calendarAvailabilityService.checkConflicts(
                 new ConflictCheckRequest(startTime, endTime, excludeEventId)
         );

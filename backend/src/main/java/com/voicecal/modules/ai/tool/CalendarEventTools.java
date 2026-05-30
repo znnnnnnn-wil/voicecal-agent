@@ -15,10 +15,13 @@ import com.voicecal.modules.calendar.entity.response.ConflictEventResponse;
 import com.voicecal.modules.calendar.entity.response.FreeTimeSlotResponse;
 import com.voicecal.modules.calendar.service.CalendarAvailabilityService;
 import com.voicecal.modules.calendar.service.CalendarEventService;
+import com.voicecal.modules.calendar.service.IcsExportService;
 import dev.langchain4j.agent.tool.P;
 import dev.langchain4j.agent.tool.Tool;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeParseException;
 import java.util.List;
@@ -33,13 +36,16 @@ public class CalendarEventTools {
 
     private final CalendarEventService calendarEventService;
     private final CalendarAvailabilityService calendarAvailabilityService;
+    private final IcsExportService icsExportService;
 
     public CalendarEventTools(
             CalendarEventService calendarEventService,
-            CalendarAvailabilityService calendarAvailabilityService
+            CalendarAvailabilityService calendarAvailabilityService,
+            IcsExportService icsExportService
     ) {
         this.calendarEventService = calendarEventService;
         this.calendarAvailabilityService = calendarAvailabilityService;
+        this.icsExportService = icsExportService;
     }
 
     /**
@@ -82,17 +88,20 @@ public class CalendarEventTools {
      * @param endTime 结束时间，ISO-8601 LocalDateTime 字符串
      * @param location 地点
      * @param category 日程分类，可为空
+     * @param reminderMinutes 提前提醒分钟数，可为空
      * @return 创建结果文本
      */
-    @Tool("Create a calendar event.")
+    @Tool("Create a calendar event. If the user does not specify duration or end time, use the same ISO-8601 LocalDateTime value for startTime and endTime.")
     public String createCalendarEvent(
             @P(name = "title", description = "Calendar event title") String title,
             @P(name = "description", description = "Calendar event description", required = false) String description,
             @P(name = "startTime", description = "Start time in ISO-8601 LocalDateTime format") String startTime,
-            @P(name = "endTime", description = "End time in ISO-8601 LocalDateTime format") String endTime,
+            @P(name = "endTime", description = "End time in ISO-8601 LocalDateTime format. If no duration is specified, use the same value as startTime.") String endTime,
             @P(name = "location", description = "Calendar event location", required = false) String location,
             @P(name = "category", description = "Calendar event category: WORK, STUDY, LIFE, MEETING, INTERVIEW, OTHER", required = false)
-            String category
+            String category,
+            @P(name = "reminderMinutes", description = "Reminder minutes before start time. Use 0 for due-time reminders.", required = false)
+            Integer reminderMinutes
     ) {
         try {
             CalendarEventResponse event = calendarEventService.createEvent(new CalendarEventCreateRequest(
@@ -101,7 +110,7 @@ public class CalendarEventTools {
                     parseDateTime(startTime),
                     parseDateTime(endTime),
                     normalizeBlank(location),
-                    null,
+                    reminderMinutes,
                     parseCategory(category)
             ));
             return "创建日程成功：" + formatEvent(event);
@@ -174,6 +183,34 @@ public class CalendarEventTools {
             return "查询空闲时间失败：时间格式不正确，请使用 ISO-8601 LocalDateTime，例如 2026-06-01T10:00:00";
         } catch (CustomException exception) {
             return "查询空闲时间失败：" + exception.getMessage();
+        }
+    }
+
+    /**
+     * 生成指定时间范围内日程的 ICS 下载链接。
+     *
+     * @param startTime 导出开始时间，ISO-8601 LocalDateTime 字符串
+     * @param endTime 导出结束时间，ISO-8601 LocalDateTime 字符串
+     * @return ICS 下载链接文本
+     */
+    @Tool("Generate an ICS download link for calendar events in a time range.")
+    public String exportCalendarEventsIcs(
+            @P(name = "startTime", description = "Export range start time in ISO-8601 LocalDateTime format") String startTime,
+            @P(name = "endTime", description = "Export range end time in ISO-8601 LocalDateTime format") String endTime
+    ) {
+        try {
+            LocalDateTime parsedStartTime = parseDateTime(startTime);
+            LocalDateTime parsedEndTime = parseDateTime(endTime);
+            icsExportService.exportEvents(parsedStartTime, parsedEndTime);
+            String downloadUrl = "/api/calendar/events/ics?startTime="
+                    + urlEncode(parsedStartTime.toString())
+                    + "&endTime="
+                    + urlEncode(parsedEndTime.toString());
+            return "ICS 导出链接已生成：" + downloadUrl;
+        } catch (DateTimeParseException exception) {
+            return "生成 ICS 导出链接失败：时间格式不正确，请使用 ISO-8601 LocalDateTime，例如 2026-06-01T10:00:00";
+        } catch (CustomException exception) {
+            return "生成 ICS 导出链接失败：" + exception.getMessage();
         }
     }
 
@@ -342,5 +379,9 @@ public class CalendarEventTools {
         return exception.getConstraintViolations().stream()
                 .map(ConstraintViolation::getMessage)
                 .collect(Collectors.joining("；"));
+    }
+
+    private String urlEncode(String value) {
+        return URLEncoder.encode(value, StandardCharsets.UTF_8);
     }
 }

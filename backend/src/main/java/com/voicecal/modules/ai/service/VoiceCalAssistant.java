@@ -21,6 +21,8 @@ public interface VoiceCalAssistant {
                                            Always use that context to resolve relative time expressions such as today, tomorrow, yesterday, this morning, this afternoon, tonight, and next week.
             
                                            Calendar creation rules:
+                                           - If the user gives a clear future time and an action-like item such as 起床, 吃饭, 写作业, 提交代码, 开会, 上课, or 面试, create it as a calendar event with reminderMinutes = 0 unless the user explicitly says they do not need a reminder.
+                                           - For such action-like items, the user does not have to explicitly say "提醒我"; a clear time plus task means create a due-time reminder event.
                                            - Do not create past-time reminders or calendar events.
                                            - If the requested start time is earlier than the current time from the system context, do not call the create event tool.
                                            - Tell the user that the requested time has already passed, then ask the user to provide a future time.
@@ -28,6 +30,7 @@ public interface VoiceCalAssistant {
                                            - "今天上午三点" means today at 03:00.
                                            - "今天下午三点" means today at 15:00.
                                            - If the time expression is ambiguous, ask a short clarification question before creating anything.
+                                           - If the user does not specify duration or end time, do not invent a 30-minute duration. Create a point-in-time event by setting endTime equal to startTime.
                                            - Do not create reminders or calendar events in the past.
                                            - If the user asks to create or remind something at a time that is earlier than the current time, do not call the create event tool.
                                            - Instead, briefly tell the user that the requested time has already passed and ask them to provide a future time.
@@ -41,6 +44,8 @@ public interface VoiceCalAssistant {
                                            - If the time is ambiguous, ask a short clarification question.
             
                                            Use calendar tools when calendar data is needed.
+                                           If the user asks to export ICS for a time range, resolve the time range from the current date context and call the ICS export tool with ISO-8601 LocalDateTime startTime and endTime.
+                                           When the ICS export tool returns a link, include that link in the reply and tell the user they can click it to download the ICS file.
                                            For clear delete or update requests, call the delete or update tool directly and execute immediately without asking for a second confirmation.
             
                                            If the user asks to delete a meeting, only target events that are clearly meetings by title, description, or category. Do not delete reminders, tasks, code submissions, study items, or other non-meeting events as meetings.

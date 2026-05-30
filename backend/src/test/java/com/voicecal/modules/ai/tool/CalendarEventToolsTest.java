@@ -67,6 +67,7 @@ class CalendarEventToolsTest {
                 "2026-06-01T10:00:00",
                 "2026-06-01T11:00:00",
                 "线上",
+                null,
                 null
         );
 
@@ -76,17 +77,38 @@ class CalendarEventToolsTest {
     }
 
     @Test
-    void createCalendarEvent_shouldReturnClearError_whenTimeRangeIsInvalid() {
+    void createCalendarEvent_shouldCreatePointInTimeEvent_whenEndTimeEqualsStartTime() {
         String result = calendarEventTools.createCalendarEvent(
-                "非法时间会议",
-                "结束时间不晚于开始时间",
+                "起床",
+                "到点事项",
                 "2026-06-01T10:00:00",
                 "2026-06-01T10:00:00",
                 "线上",
+                null,
+                0
+        );
+
+        assertThat(result).contains("创建日程成功", "起床");
+        assertThat(calendarEventRepository.findAll()).hasSize(1);
+        CalendarEvent event = calendarEventRepository.findAll().get(0);
+        assertThat(event.getStartTime()).isEqualTo(LocalDateTime.of(2026, 6, 1, 10, 0));
+        assertThat(event.getEndTime()).isEqualTo(LocalDateTime.of(2026, 6, 1, 10, 0));
+        assertThat(event.getReminderMinutes()).isZero();
+    }
+
+    @Test
+    void createCalendarEvent_shouldReturnClearError_whenEndTimeIsBeforeStartTime() {
+        String result = calendarEventTools.createCalendarEvent(
+                "非法时间会议",
+                "结束时间早于开始时间",
+                "2026-06-01T10:00:00",
+                "2026-06-01T09:00:00",
+                "线上",
+                null,
                 null
         );
 
-        assertThat(result).contains("success=false", "结束时间必须晚于开始时间");
+        assertThat(result).contains("success=false", "结束时间不能早于开始时间");
         assertThat(calendarEventRepository.findAll()).isEmpty();
     }
 
@@ -98,6 +120,7 @@ class CalendarEventToolsTest {
                 "2000-01-01T03:00:00",
                 "2000-01-01T03:30:00",
                 "线上",
+                null,
                 null
         );
 
@@ -139,6 +162,32 @@ class CalendarEventToolsTest {
                 .contains("结束: 2026-05-29T14:00")
                 .contains("开始: 2026-05-29T17:00")
                 .contains("结束: 2026-05-29T18:00");
+    }
+
+    @Test
+    void exportCalendarEventsIcs_shouldReturnDownloadUrl() {
+        calendarEventRepository.saveAndFlush(createEvent("导出会议", 10, 11));
+
+        String result = calendarEventTools.exportCalendarEventsIcs(
+                "2026-05-29T00:00:00",
+                "2026-05-30T00:00:00"
+        );
+
+        assertThat(result)
+                .contains("ICS 导出链接已生成")
+                .contains("/api/calendar/events/ics")
+                .contains("startTime=2026-05-29T00%3A00")
+                .contains("endTime=2026-05-30T00%3A00");
+    }
+
+    @Test
+    void exportCalendarEventsIcs_shouldReturnClearError_whenTimeRangeIsInvalid() {
+        String result = calendarEventTools.exportCalendarEventsIcs(
+                "2026-05-30T00:00:00",
+                "2026-05-29T00:00:00"
+        );
+
+        assertThat(result).contains("生成 ICS 导出链接失败", "结束时间必须晚于开始时间");
     }
 
     @Test

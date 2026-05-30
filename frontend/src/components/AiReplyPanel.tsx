@@ -37,11 +37,33 @@ function AiReplyPanel({ reply, state }: AiReplyPanelProps) {
             <p className="pt-1 text-xs text-[#5f6368]">正在等待后端 AI 接口响应...</p>
           </div>
         ) : (
-          <p className="whitespace-pre-wrap text-sm leading-7 text-[#174ea6]">{reply}</p>
+          <p className="whitespace-pre-wrap text-sm leading-7 text-[#174ea6]">
+            {renderReply(reply)}
+          </p>
         )}
       </div>
     </section>
   )
+}
+
+function renderReply(reply: string) {
+  const linkPattern = /(\/api\/calendar\/events\/(?:\d+\/ics|ics\?[^\s，。；\n]+))/g
+  const exactLinkPattern = /^\/api\/calendar\/events\/(?:\d+\/ics|ics\?[^\s，。；\n]+)$/
+  return reply.split(linkPattern).map((part, index) => {
+    if (!exactLinkPattern.test(part)) {
+      return part
+    }
+    return (
+      <a
+        className="font-semibold text-[#1a73e8] underline underline-offset-2 hover:text-[#1765cc]"
+        download
+        href={part}
+        key={`${part}-${index}`}
+      >
+        下载 ICS
+      </a>
+    )
+  })
 }
 
 export default AiReplyPanel

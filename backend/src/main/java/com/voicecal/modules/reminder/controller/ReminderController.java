@@ -32,6 +32,7 @@ public class ReminderController {
     public ApiResponse<List<ReminderResponse>> getRecentReminders(
             @RequestParam(defaultValue = "20") Integer limit
     ) {
+        reminderService.triggerDueReminders();
         return ApiResponse.success("查询最近提醒成功", reminderService.getRecentTriggeredReminders(limit));
     }
 }

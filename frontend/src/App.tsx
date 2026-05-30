@@ -32,6 +32,7 @@ import type { Reminder } from './types/reminder'
 
 const initialReply =
   '我可以帮你创建、查询、整理日程，也可以处理提醒、冲突检测、空闲时间查询和 ICS 导出。'
+const REMINDER_REFRESH_INTERVAL_MS = 15_000
 
 function App() {
   const [command, setCommand] = useState('明天下午三点提醒我提交项目代码')
@@ -123,6 +124,27 @@ function App() {
     }
   }, [])
 
+  const refreshReminderStateSilently = useCallback(async () => {
+    try {
+      const [reminders, events, today] = await Promise.all([
+        fetchRecentReminders(20),
+        fetchCalendarEvents(),
+        fetchTodayEvents(),
+      ])
+      setRecentReminders(reminders)
+      setCalendarEvents(events)
+      setTodayEvents(today)
+      setRemindersError(null)
+      setCalendarError(null)
+      setTodayError(null)
+      setIsUsingDemoReminders(false)
+      setIsUsingDemoCalendar(false)
+      setIsUsingDemoToday(false)
+    } catch {
+      // 后台刷新失败时保留当前页面数据，避免轮询造成闪烁或 fallback 抖动。
+    }
+  }, [])
+
   const loadTodayEvents = useCallback(async () => {
     setIsTodayLoading(true)
     setTodayError(null)
@@ -189,6 +211,14 @@ function App() {
     const updatedEvent = calendarEvents.find((event) => event.id === selectedEvent.id)
     setSelectedEvent(updatedEvent ?? null)
   }, [calendarEvents, selectedEvent])
+
+  useEffect(() => {
+    const timer = window.setInterval(() => {
+      void refreshReminderStateSilently()
+    }, REMINDER_REFRESH_INTERVAL_MS)
+
+    return () => window.clearInterval(timer)
+  }, [refreshReminderStateSilently])
 
   const handleRunCommand = async (nextCommand?: string) => {
     const commandText = (nextCommand ?? command).trim()
@@ -277,12 +307,12 @@ function App() {
         <aside className="space-y-4 lg:col-span-2 xl:sticky xl:top-20 xl:col-span-1 xl:max-h-[calc(100vh-6rem)] xl:overflow-y-auto">
           <EventDetailPanel event={selectedEvent} onClose={() => setSelectedEvent(null)} />
           <AiReplyPanel reply={reply} state={replyState} />
-          <OperationLog
-            error={logsError}
-            isLoading={isLogsLoading}
-            isUsingDemoLogs={isUsingDemoLogs}
-            logs={logs}
-            onRetry={loadVoiceCommandLogs}
+          <DailySummaryCard
+            error={summaryError}
+            isLoading={isSummaryLoading}
+            isUsingDemoSummary={isUsingDemoSummary}
+            onRetry={loadDailySummary}
+            summary={dailySummary}
           />
           <RecentReminders
             error={remindersError}
@@ -297,12 +327,12 @@ function App() {
             isLoading={isWeekLoading}
             isUsingDemoEvents={isUsingDemoWeek}
           />
-          <DailySummaryCard
-            error={summaryError}
-            isLoading={isSummaryLoading}
-            isUsingDemoSummary={isUsingDemoSummary}
-            onRetry={loadDailySummary}
-            summary={dailySummary}
+          <OperationLog
+            error={logsError}
+            isLoading={isLogsLoading}
+            isUsingDemoLogs={isUsingDemoLogs}
+            logs={logs}
+            onRetry={loadVoiceCommandLogs}
           />
         </aside>
       </main>
