@@ -1,10 +1,16 @@
-import { apiGet, apiPost } from '../lib/apiClient'
-import type { AiChatRequest, AiChatResponse, DailySummary } from '../types/ai'
+import { apiGet, apiPost, apiPostForm } from '../lib/apiClient'
+import type { AiChatRequest, AiChatResponse, DailySummary, SpeechTranscriptionResponse } from '../types/ai'
 
 const DEFAULT_TIMEZONE = 'Asia/Shanghai'
 
 export function chatWithAi(message: string) {
   return apiPost<AiChatRequest, AiChatResponse>('/api/ai/chat', { message })
+}
+
+export function transcribeAudio(audio: Blob) {
+  const formData = new FormData()
+  formData.append('audio', audio, 'voicecal-command.webm')
+  return apiPostForm<SpeechTranscriptionResponse>('/api/ai/speech/transcriptions', formData)
 }
 
 export function getDailySummary(date?: string, timezone = DEFAULT_TIMEZONE) {

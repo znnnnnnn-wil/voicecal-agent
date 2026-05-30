@@ -15,6 +15,10 @@ export function apiPost<TRequest, TResponse>(path: string, body: TRequest): Prom
   return request<TResponse>(path, { method: 'POST', body })
 }
 
+export function apiPostForm<TResponse>(path: string, body: FormData): Promise<TResponse> {
+  return requestForm<TResponse>(path, body)
+}
+
 async function request<T>(path: string, options: RequestOptions): Promise<T> {
   const response = await fetch(buildUrl(path), {
     method: options.method,
@@ -49,6 +53,34 @@ function buildUrl(path: string) {
     return path
   }
   return `${API_BASE_URL.replace(/\/$/, '')}/${path.replace(/^\//, '')}`
+}
+
+async function requestForm<T>(path: string, body: FormData): Promise<T> {
+  const response = await fetch(buildUrl(path), {
+    method: 'POST',
+    headers: {
+      Accept: 'application/json',
+    },
+    body,
+  }).catch(() => {
+    throw new Error('无法连接后端服务，请确认 Spring Boot 已启动。')
+  })
+
+  const payload = await parseJson(response)
+  const apiResponse = isRecord(payload) ? (payload as ApiResponse<T>) : undefined
+
+  if (!response.ok) {
+    throw new Error(apiResponse?.message || `请求失败，HTTP 状态码 ${response.status}`)
+  }
+
+  if (apiResponse && isApiResponse(apiResponse)) {
+    if (apiResponse.success === false || isFailureCode(apiResponse.code)) {
+      throw new Error(apiResponse.message || '后端返回业务错误')
+    }
+    return apiResponse.data as T
+  }
+
+  return payload as T
 }
 
 async function parseJson(response: Response): Promise<unknown> {

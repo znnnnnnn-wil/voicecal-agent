@@ -11,7 +11,7 @@ type VoiceAssistantCardProps = {
   isSuccess: boolean
   reply: string
   onCommandChange: (value: string) => void
-  onRunCommand: () => void
+  onRunCommand: (command?: string) => void
   onLog: (label: string, detail: string, status: 'success' | 'info' | 'pending') => void
 }
 
@@ -79,6 +79,7 @@ function VoiceAssistantCard({
     stop,
   } = useSpeechSynthesis()
   const [lastSpokenReply, setLastSpokenReply] = useState('')
+  const [lastSubmittedTranscript, setLastSubmittedTranscript] = useState('')
 
   const status = useMemo<AssistantStatus>(() => {
     if (isLoading) {
@@ -105,8 +106,12 @@ function VoiceAssistantCard({
     if (transcript) {
       onCommandChange(transcript)
       onLog('Voice transcript captured', transcript, 'success')
+      if (transcript !== lastSubmittedTranscript && !isLoading) {
+        setLastSubmittedTranscript(transcript)
+        onRunCommand(transcript)
+      }
     }
-  }, [onCommandChange, onLog, transcript])
+  }, [isLoading, lastSubmittedTranscript, onCommandChange, onLog, onRunCommand, transcript])
 
   useEffect(() => {
     if (isSuccess && reply && isSpeechSupported && reply !== lastSpokenReply) {
@@ -122,7 +127,8 @@ function VoiceAssistantCard({
       return
     }
     resetTranscript()
-    onLog('Voice recognition started', 'Listening for a browser speech transcript', 'info')
+    setLastSubmittedTranscript('')
+    onLog('Voice recording started', 'Recording audio for server-side transcription', 'info')
     startListening()
   }
 
@@ -223,7 +229,7 @@ function VoiceAssistantCard({
                 aria-label="发送指令给 AI"
                 className="rounded-full bg-white px-5 py-3 text-sm font-semibold text-slate-950 shadow-xl shadow-cyan-950/30 transition hover:-translate-y-0.5 hover:bg-cyan-100 focus:outline-none focus:ring-2 focus:ring-cyan-200 focus:ring-offset-2 focus:ring-offset-[#0d131a] disabled:cursor-not-allowed disabled:opacity-70 disabled:hover:translate-y-0"
                 disabled={isLoading}
-                onClick={onRunCommand}
+                onClick={() => onRunCommand()}
                 type="button"
               >
                 {isLoading ? '发送中...' : '发送给 AI'}

@@ -3,6 +3,7 @@ package com.voicecal.modules.ai.tool;
 import com.voicecal.common.enums.dao.EventStatus;
 import com.voicecal.dao.entity.CalendarEvent;
 import com.voicecal.dao.repository.CalendarEventRepository;
+import com.voicecal.modules.ai.context.AiRequestContext;
 import com.voicecal.modules.assistant.pending.PendingActionStore;
 import java.time.LocalDateTime;
 import org.junit.jupiter.api.BeforeEach;
@@ -33,6 +34,7 @@ class CalendarEventToolsTest {
 
     @BeforeEach
     void setUp() {
+        AiRequestContext.clear();
         pendingActionStore.clear();
         calendarEventRepository.deleteAll();
         calendarEventRepository.flush();
@@ -148,12 +150,37 @@ class CalendarEventToolsTest {
         CalendarEvent event = calendarEventRepository.saveAndFlush(createEvent("待删除会议", 10, 11));
         String createResult = calendarEventTools.createPendingDeleteAction("conversation-a", event.getId());
         String actionId = pendingActionStore.findByConversationId("conversation-a").get(0).id();
+        AiRequestContext.setUserMessage("确认");
 
         String confirmResult = calendarEventTools.confirmPendingAction("conversation-a", actionId);
 
         assertThat(createResult).contains("已创建待确认删除操作");
         assertThat(confirmResult).isEqualTo("已删除日程");
         assertThat(calendarEventRepository.findById(event.getId())).isEmpty();
+    }
+
+    @Test
+    void confirmPendingAction_shouldReject_whenUserMessageIsNotExplicitConfirmation() {
+        CalendarEvent event = calendarEventRepository.saveAndFlush(createEvent("待删除会议", 10, 11));
+        calendarEventTools.createPendingDeleteAction("conversation-a", event.getId());
+        String actionId = pendingActionStore.findByConversationId("conversation-a").get(0).id();
+        AiRequestContext.setUserMessage("删除明天下午的会议");
+
+        String confirmResult = calendarEventTools.confirmPendingAction("conversation-a", actionId);
+
+        assertThat(confirmResult).contains("确认操作已拦截");
+        assertThat(calendarEventRepository.findById(event.getId())).isPresent();
+    }
+
+    @Test
+    void createPendingDeleteAction_shouldRejectNonMeeting_whenUserAsksToDeleteMeeting() {
+        CalendarEvent event = calendarEventRepository.saveAndFlush(createEvent("提交项目代码", 15, 16));
+        AiRequestContext.setUserMessage("删除明天下午的会议");
+
+        String result = calendarEventTools.createPendingDeleteAction("conversation-a", event.getId());
+
+        assertThat(result).contains("删除操作已拦截");
+        assertThat(pendingActionStore.findByConversationId("conversation-a")).isEmpty();
     }
 
     @Test

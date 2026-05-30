@@ -1,6 +1,7 @@
 package com.voicecal.modules.ai.service.impl;
 
 import com.voicecal.dao.entity.CalendarEvent;
+import com.voicecal.modules.ai.context.AiRequestContext;
 import com.voicecal.modules.ai.request.AiChatRequest;
 import com.voicecal.modules.ai.response.AiChatResponse;
 import com.voicecal.modules.ai.service.AiChatService;
@@ -44,7 +45,17 @@ public class AiChatServiceImpl implements AiChatService {
     public AiChatResponse chat(AiChatRequest request) {
         try {
             VoiceCalAssistant assistant = voiceCalAssistantProvider.getIfAvailable();
-            String reply = assistant == null ? FALLBACK_REPLY : assistant.chat(buildContextualMessage(request.message()));
+            String reply;
+            if (assistant == null) {
+                reply = FALLBACK_REPLY;
+            } else {
+                AiRequestContext.setUserMessage(request.message());
+                try {
+                    reply = assistant.chat(buildContextualMessage(request.message()));
+                } finally {
+                    AiRequestContext.clear();
+                }
+            }
             saveLogSafely(request, reply, true);
             return new AiChatResponse(reply);
         } catch (RuntimeException exception) {
@@ -66,6 +77,10 @@ public class AiChatServiceImpl implements AiChatService {
                 - 请基于上述日期解析“今天、明天、后天、下周”等相对时间。
                 - 如果用户要求“提醒我”且没有说明提前多久提醒，创建日程时 reminderMinutes 使用 0。
                 - 如果用户没有说明结束时间，默认结束时间为开始时间后 30 分钟。
+                - 删除或修改日程属于危险操作，只能创建待确认操作，不能直接确认执行。
+                - 只有当用户原始消息明确只是“确认、确定、yes、confirm”等确认话术时，才允许确认待执行操作。
+                - 用户说“删除会议”时，只能匹配标题、描述或分类明确为会议的日程；不要把提醒、任务、提交代码、学习等非会议日程当成会议删除。
+                - 如果没有明确匹配的会议，回复用户没有找到匹配会议，并请用户补充标题或时间。
 
                 用户原始消息：
                 %s

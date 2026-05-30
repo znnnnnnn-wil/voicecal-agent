@@ -272,8 +272,9 @@ function App() {
     setSelectedEvent(updatedEvent ?? null)
   }, [calendarEvents, selectedEvent])
 
-  const handleRunCommand = async () => {
-    if (!command.trim()) {
+  const handleRunCommand = async (nextCommand?: string) => {
+    const commandText = (nextCommand ?? command).trim()
+    if (!commandText) {
       setReplyState('error')
       setFeedback('error')
       setChatSuccess(false)
@@ -293,7 +294,7 @@ function App() {
     })
 
     try {
-      const response = await chatWithAi(command.trim())
+      const response = await chatWithAi(commandText)
       setReplyState('success')
       setFeedback('success')
       setChatSuccess(true)
