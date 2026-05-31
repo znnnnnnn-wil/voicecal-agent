@@ -21,7 +21,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 /**
  * 每日摘要接口集成测试。
  */
-@ActiveProfiles("h2")
+@ActiveProfiles("mysql")
 @AutoConfigureMockMvc
 @SpringBootTest(properties = {
         "spring.jpa.hibernate.ddl-auto=create-drop"

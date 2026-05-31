@@ -17,7 +17,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 /**
  * 语音命令操作日志接口集成测试。
  */
-@ActiveProfiles("h2")
+@ActiveProfiles("mysql")
 @AutoConfigureMockMvc
 @SpringBootTest(properties = {
         "spring.jpa.hibernate.ddl-auto=create-drop"
