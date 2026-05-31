@@ -10,6 +10,7 @@ import com.voicecal.modules.assistant.router.FastCommandType;
 import com.voicecal.modules.calendar.entity.response.CalendarEventResponse;
 import com.voicecal.modules.calendar.service.CalendarAvailabilityService;
 import com.voicecal.modules.calendar.service.CalendarEventQueryService;
+import com.voicecal.modules.log.response.VoiceCommandLogResponse;
 import com.voicecal.modules.log.service.VoiceCommandLogService;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -108,5 +109,49 @@ class AiChatServiceImplTest {
                 .contains("当前时区：Asia/Shanghai")
                 .contains("reminderMinutes 使用 0")
                 .contains("明天下午三点提醒我提交项目代码");
+    }
+
+    @Test
+    void chat_shouldSendRecentConversationContextToAssistant_whenUserRepliesWithClarification() {
+        VoiceCalAssistant assistant = mock(VoiceCalAssistant.class);
+        VoiceCommandLogService logService = mock(VoiceCommandLogService.class);
+        FastCommandRouter fastCommandRouter = mock(FastCommandRouter.class);
+        CalendarEventQueryService calendarEventQueryService = mock(CalendarEventQueryService.class);
+        CalendarAvailabilityService calendarAvailabilityService = mock(CalendarAvailabilityService.class);
+        @SuppressWarnings("unchecked")
+        ObjectProvider<VoiceCalAssistant> assistantProvider = mock(ObjectProvider.class);
+        AiChatServiceImpl aiChatService = new AiChatServiceImpl(
+                assistantProvider,
+                logService,
+                fastCommandRouter,
+                calendarEventQueryService,
+                calendarAvailabilityService
+        );
+        when(fastCommandRouter.tryRoute("凌晨")).thenReturn(FastCommandRouteResult.notMatched());
+        when(assistantProvider.getIfAvailable()).thenReturn(assistant);
+        when(logService.getRecentLogs("demo", 3)).thenReturn(List.of(new VoiceCommandLogResponse(
+                1L,
+                "demo",
+                "下周一晚上两点要开会",
+                "你说的晚上两点是凌晨 2 点还是下午 2 点？",
+                "LLM",
+                null,
+                null,
+                null,
+                true,
+                LocalDateTime.of(2026, 5, 31, 10, 0)
+        )));
+        when(assistant.chat(anyString())).thenReturn("已按凌晨 2 点创建会议。");
+
+        aiChatService.chat(new AiChatRequest("凌晨", "demo"));
+
+        ArgumentCaptor<String> messageCaptor = ArgumentCaptor.forClass(String.class);
+        verify(assistant).chat(messageCaptor.capture());
+        assertThat(messageCaptor.getValue())
+                .contains("最近对话上下文")
+                .contains("下周一晚上两点要开会")
+                .contains("凌晨 2 点还是下午 2 点")
+                .contains("用户原始消息")
+                .contains("凌晨");
     }
 }

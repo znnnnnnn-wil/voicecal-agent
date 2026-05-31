@@ -3,8 +3,8 @@ import type { AiChatRequest, AiChatResponse, DailySummary, SpeechTranscriptionRe
 
 const DEFAULT_TIMEZONE = 'Asia/Shanghai'
 
-export function chatWithAi(message: string) {
-  return apiPost<AiChatRequest, AiChatResponse>('/api/ai/chat', { message })
+export function chatWithAi(message: string, conversationId = 'default') {
+  return apiPost<AiChatRequest, AiChatResponse>('/api/ai/chat', { message, conversationId })
 }
 
 export function transcribeAudio(audio: Blob) {
