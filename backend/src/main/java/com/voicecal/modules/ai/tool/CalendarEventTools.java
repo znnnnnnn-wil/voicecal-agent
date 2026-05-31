@@ -220,7 +220,7 @@ public class CalendarEventTools {
      * @param eventId 日程 ID
      * @return 删除结果文本
      */
-    @Tool("Delete a calendar event directly by id.")
+    @Tool("Delete a calendar event by id only after the user has explicitly confirmed the deletion.")
     public String deleteCalendarEvent(
             @P(name = "eventId", description = "Calendar event id to delete") Long eventId
     ) {
@@ -228,6 +228,9 @@ public class CalendarEventTools {
             CalendarEventResponse event = calendarEventService.getEvent(eventId);
             if (isMeetingDeleteRequest() && !isMeetingEvent(event)) {
                 return "删除操作已拦截：用户要求删除会议，但目标日程不是会议。请补充会议标题或更精确的时间。";
+            }
+            if (!isConfirmedImportantOperation()) {
+                return "请确认是否删除日程：" + formatEvent(event) + "。回复“确认”后我再执行删除。";
             }
             calendarEventService.deleteEvent(eventId);
             return "删除日程成功：" + event.title();
@@ -247,7 +250,7 @@ public class CalendarEventTools {
      * @param location 更新后的地点
      * @return 更新结果文本
      */
-    @Tool("Update a calendar event directly by id.")
+    @Tool("Update a calendar event by id only after the user has explicitly confirmed the update.")
     public String updateCalendarEvent(
             @P(name = "eventId", description = "Calendar event id to update") Long eventId,
             @P(name = "title", description = "Updated calendar event title") String title,
@@ -259,6 +262,15 @@ public class CalendarEventTools {
             @P(name = "location", description = "Updated calendar event location", required = false) String location
     ) {
         try {
+            CalendarEventResponse existingEvent = calendarEventService.getEvent(eventId);
+            if (!isConfirmedImportantOperation()) {
+                return "请确认是否修改日程：" + formatEvent(existingEvent)
+                        + "。修改后标题：" + title
+                        + "，开始：" + startTime
+                        + "，结束：" + endTime
+                        + (normalizeBlank(location) == null ? "" : "，地点：" + location)
+                        + "。回复“确认”后我再执行修改。";
+            }
             CalendarEventResponse event = calendarEventService.updateEvent(
                     eventId,
                     new CalendarEventUpdateRequest(
@@ -284,6 +296,29 @@ public class CalendarEventTools {
         return message.contains("删除") && (message.contains("会议") || message.contains("meeting"));
     }
 
+    private boolean isConfirmedImportantOperation() {
+        String message = normalizeContextMessage()
+                .replace(" ", "")
+                .replace("，", "")
+                .replace(",", "")
+                .replace("。", "")
+                .replace("！", "")
+                .replace("!", "");
+        if (message.isBlank()) {
+            return true;
+        }
+        if (message.contains("确认删除") || message.contains("确定删除") || message.contains("执行删除")) {
+            return true;
+        }
+        if (message.contains("确认修改") || message.contains("确定修改") || message.contains("执行修改")) {
+            return true;
+        }
+        if (message.contains("删除吧") || message.contains("删吧") || message.contains("修改吧") || message.contains("改吧")) {
+            return true;
+        }
+        return message.length() <= 8 && containsAny(message, "确认", "确定", "是的", "对", "同意", "执行", "没问题");
+    }
+
     private boolean isMeetingEvent(CalendarEventResponse event) {
         if (event.category() == EventCategory.MEETING) {
             return true;
@@ -300,6 +335,15 @@ public class CalendarEventTools {
                 || text.contains("review")
                 || text.contains("sync")
                 || text.contains("standup");
+    }
+
+    private boolean containsAny(String value, String... candidates) {
+        for (String candidate : candidates) {
+            if (value.contains(candidate)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private String normalizeContextMessage() {

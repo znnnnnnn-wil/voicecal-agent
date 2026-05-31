@@ -213,16 +213,46 @@ class CalendarEventToolsTest {
     }
 
     @Test
+    void deleteCalendarEvent_shouldAskForConfirmation_whenUserHasNotConfirmed() {
+        CalendarEvent event = calendarEventRepository.saveAndFlush(createEvent("待删除会议", 10, 11));
+        AiRequestContext.setUserMessage("删除明天下午的会议");
+
+        String result = calendarEventTools.deleteCalendarEvent(event.getId());
+
+        assertThat(result).contains("请确认是否删除日程", "待删除会议");
+        assertThat(calendarEventRepository.findById(event.getId())).isPresent();
+    }
+
+    @Test
     void deleteCalendarEvent_shouldAllowKaiHui_whenUserAsksToDeleteMeeting() {
         CalendarEvent event = createEvent("开会", 15, 16);
         event.setCategory(EventCategory.OTHER);
         CalendarEvent savedEvent = calendarEventRepository.saveAndFlush(event);
-        AiRequestContext.setUserMessage("删除明天下午的会议");
+        AiRequestContext.setUserMessage("确认");
 
         String result = calendarEventTools.deleteCalendarEvent(savedEvent.getId());
 
         assertThat(result).contains("删除日程成功", "开会");
         assertThat(calendarEventRepository.findById(savedEvent.getId())).isEmpty();
+    }
+
+    @Test
+    void updateCalendarEvent_shouldAskForConfirmation_whenUserHasNotConfirmed() {
+        CalendarEvent event = calendarEventRepository.saveAndFlush(createEvent("旧会议", 10, 11));
+        AiRequestContext.setUserMessage("把旧会议改到下午一点");
+
+        String result = calendarEventTools.updateCalendarEvent(
+                event.getId(),
+                "旧会议",
+                "更新描述",
+                "2026-05-29T13:00:00",
+                "2026-05-29T14:00:00",
+                "线上"
+        );
+
+        assertThat(result).contains("请确认是否修改日程", "旧会议");
+        assertThat(calendarEventRepository.findById(event.getId()).orElseThrow().getStartTime())
+                .isEqualTo(LocalDateTime.of(2026, 5, 29, 10, 0));
     }
 
     @Test
