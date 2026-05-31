@@ -63,7 +63,7 @@ public class CalendarEvent {
     private LocalDateTime startTime;
 
     /**
-     * 日程结束时间，后续 Service 层负责校验其晚于开始时间。
+     * 日程结束时间，后续 Service 层负责校验其不早于开始时间。
      */
     @NotNull(message = "结束时间不能为空")
     @Column(name = "end_time", nullable = false)
@@ -109,7 +109,7 @@ public class CalendarEvent {
     private EventCategory category;
 
     /**
-     * 日程状态，DELETED 用于软删除。
+     * 日程状态，用于区分有效、取消或已删除的日程。
      */
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 30)
@@ -129,7 +129,7 @@ public class CalendarEvent {
      */
     @PrePersist
     public void prePersist() {
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = now();
         createdAt = now;
         updatedAt = now;
         applyDefaults();
@@ -140,8 +140,12 @@ public class CalendarEvent {
      */
     @PreUpdate
     public void preUpdate() {
-        updatedAt = LocalDateTime.now();
+        updatedAt = now();
         applyDefaults();
+    }
+
+    private static LocalDateTime now() {
+        return LocalDateTime.now();
     }
 
     private void applyDefaults() {

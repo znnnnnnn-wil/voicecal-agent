@@ -66,8 +66,12 @@ public class VoiceCommandLog {
     @PrePersist
     public void prePersist() {
         if (createdAt == null) {
-            createdAt = LocalDateTime.now();
+            createdAt = now();
         }
+    }
+
+    private static LocalDateTime now() {
+        return LocalDateTime.now();
     }
 
     public Long getId() {

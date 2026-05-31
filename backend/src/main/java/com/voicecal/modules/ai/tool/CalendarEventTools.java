@@ -3,7 +3,6 @@ package com.voicecal.modules.ai.tool;
 import com.voicecal.common.enums.ResultCodeEnum;
 import com.voicecal.common.enums.dao.EventCategory;
 import com.voicecal.common.exception.CustomException;
-import com.voicecal.common.exception.ResourceNotFoundException;
 import com.voicecal.modules.ai.context.AiRequestContext;
 import com.voicecal.modules.calendar.entity.request.CalendarEventCreateRequest;
 import com.voicecal.modules.calendar.entity.request.CalendarEventUpdateRequest;
@@ -72,8 +71,6 @@ public class CalendarEventTools {
     public String getCalendarEventById(@P(name = "id", description = "Calendar event id") Long id) {
         try {
             return formatEvent(calendarEventService.getEvent(id));
-        } catch (ResourceNotFoundException exception) {
-            return "查询日程失败：" + exception.getMessage();
         } catch (CustomException exception) {
             return "查询日程失败：" + exception.getMessage();
         }
@@ -229,7 +226,7 @@ public class CalendarEventTools {
             if (isMeetingDeleteRequest() && !isMeetingEvent(event)) {
                 return "删除操作已拦截：用户要求删除会议，但目标日程不是会议。请补充会议标题或更精确的时间。";
             }
-            if (!isConfirmedImportantOperation()) {
+            if (needsImportantOperationConfirmation()) {
                 return "请确认是否删除日程：" + formatEvent(event) + "。回复“确认”后我再执行删除。";
             }
             calendarEventService.deleteEvent(eventId);
@@ -263,7 +260,7 @@ public class CalendarEventTools {
     ) {
         try {
             CalendarEventResponse existingEvent = calendarEventService.getEvent(eventId);
-            if (!isConfirmedImportantOperation()) {
+            if (needsImportantOperationConfirmation()) {
                 return "请确认是否修改日程：" + formatEvent(existingEvent)
                         + "。修改后标题：" + title
                         + "，开始：" + startTime
@@ -296,7 +293,7 @@ public class CalendarEventTools {
         return message.contains("删除") && (message.contains("会议") || message.contains("meeting"));
     }
 
-    private boolean isConfirmedImportantOperation() {
+    private boolean needsImportantOperationConfirmation() {
         String message = normalizeContextMessage()
                 .replace(" ", "")
                 .replace("，", "")
@@ -305,18 +302,18 @@ public class CalendarEventTools {
                 .replace("！", "")
                 .replace("!", "");
         if (message.isBlank()) {
-            return true;
+            return false;
         }
         if (message.contains("确认删除") || message.contains("确定删除") || message.contains("执行删除")) {
-            return true;
+            return false;
         }
         if (message.contains("确认修改") || message.contains("确定修改") || message.contains("执行修改")) {
-            return true;
+            return false;
         }
         if (message.contains("删除吧") || message.contains("删吧") || message.contains("修改吧") || message.contains("改吧")) {
-            return true;
+            return false;
         }
-        return message.length() <= 8 && containsAny(message, "确认", "确定", "是的", "对", "同意", "执行", "没问题");
+        return message.length() > 8 || !containsAny(message, "确认", "确定", "是的", "对", "同意", "执行", "没问题");
     }
 
     private boolean isMeetingEvent(CalendarEventResponse event) {
@@ -373,14 +370,14 @@ public class CalendarEventTools {
     }
 
     private String formatEvent(CalendarEventResponse event) {
-        StringBuilder builder = new StringBuilder();
-        builder.append("ID: ").append(event.id())
-                .append(", 标题: ").append(event.title())
-                .append(", 开始: ").append(event.startTime())
-                .append(", 结束: ").append(event.endTime());
-        if (event.location() != null && !event.location().isBlank()) {
-            builder.append(", 地点: ").append(event.location());
-        }
+        StringBuilder builder = appendBaseEventFields(
+                new StringBuilder(),
+                event.id(),
+                event.title(),
+                event.startTime(),
+                event.endTime(),
+                event.location()
+        );
         builder.append(", 分类: ").append(event.category());
         if (event.description() != null && !event.description().isBlank()) {
             builder.append(", 描述: ").append(event.description());
@@ -401,18 +398,37 @@ public class CalendarEventTools {
 
     private String formatConflictEvents(List<ConflictEventResponse> events) {
         return events.stream()
-                .map(event -> {
-                    StringBuilder builder = new StringBuilder();
-                    builder.append("ID: ").append(event.id())
-                            .append(", 标题: ").append(event.title())
-                            .append(", 开始: ").append(event.startTime())
-                            .append(", 结束: ").append(event.endTime());
-                    if (event.location() != null && !event.location().isBlank()) {
-                        builder.append(", 地点: ").append(event.location());
-                    }
-                    return builder.toString();
-                })
+                .map(this::formatConflictEvent)
                 .collect(Collectors.joining("\n"));
+    }
+
+    private String formatConflictEvent(ConflictEventResponse event) {
+        return appendBaseEventFields(
+                new StringBuilder(),
+                event.id(),
+                event.title(),
+                event.startTime(),
+                event.endTime(),
+                event.location()
+        ).toString();
+    }
+
+    private StringBuilder appendBaseEventFields(
+            StringBuilder builder,
+            Long id,
+            String title,
+            LocalDateTime startTime,
+            LocalDateTime endTime,
+            String location
+    ) {
+        builder.append("ID: ").append(id)
+                .append(", 标题: ").append(title)
+                .append(", 开始: ").append(startTime)
+                .append(", 结束: ").append(endTime);
+        if (location != null && !location.isBlank()) {
+            builder.append(", 地点: ").append(location);
+        }
+        return builder;
     }
 
     private String formatFreeTimeSlots(List<FreeTimeSlotResponse> slots) {
