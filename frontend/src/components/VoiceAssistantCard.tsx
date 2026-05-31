@@ -197,7 +197,7 @@ function VoiceAssistantCard({
         <div className="flex flex-wrap gap-2">
           {examples.map((example) => (
             <button
-              className="rounded-full border border-[#dadce0] bg-white px-3 py-1.5 text-xs text-[#3c4043] transition hover:border-blue-200 hover:bg-blue-50 hover:text-[#1a73e8]"
+              className="max-w-full rounded-full border border-[#dadce0] bg-white px-3 py-1.5 text-left text-xs leading-5 text-[#3c4043] transition hover:border-blue-200 hover:bg-blue-50 hover:text-[#1a73e8]"
               key={example}
               onClick={() => onCommandChange(example)}
               type="button"
