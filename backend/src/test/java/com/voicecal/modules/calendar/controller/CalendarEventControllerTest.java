@@ -279,6 +279,42 @@ class CalendarEventControllerTest {
     }
 
     @Test
+    void createEvent_shouldReturnBadRequest_whenPointInTimeEventConflictsAtSameTime() throws Exception {
+        calendarEventRepository.saveAndFlush(createEvent("已有会议", 20, 20));
+        Map<String, Object> request = validRequest(
+                "重复会议",
+                "同一时间点会议",
+                "2026-05-29T20:00:00",
+                "2026-05-29T20:00:00",
+                "线上"
+        );
+
+        mockMvc.perform(post("/api/calendar/events")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("日程时间与已有日程冲突"));
+    }
+
+    @Test
+    void createEvent_shouldReturnBadRequest_whenPointInTimeEventFallsInsideExistingEvent() throws Exception {
+        calendarEventRepository.saveAndFlush(createEvent("已有会议", 19, 21));
+        Map<String, Object> request = validRequest(
+                "冲突会议",
+                "落入已有会议时间段",
+                "2026-05-29T20:00:00",
+                "2026-05-29T20:00:00",
+                "线上"
+        );
+
+        mockMvc.perform(post("/api/calendar/events")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("日程时间与已有日程冲突"));
+    }
+
+    @Test
     void createEvent_shouldReturnBadRequest_whenEndTimeIsBeforeStartTime() throws Exception {
         Map<String, Object> request = validRequest(
                 "无效时间会议",
