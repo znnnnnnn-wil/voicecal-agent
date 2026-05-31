@@ -3,7 +3,7 @@ import { transcribeAudio } from '../services/aiService'
 
 const VOICE_RECORDING_CONFIG = {
   silenceThreshold: 0.015,
-  silenceDurationMs: 1_000,
+  silenceDurationMs: 700,
   minRecordingMs: 600,
   maxRecordingMs: 15_000,
   meterIntervalMs: 80,
@@ -184,6 +184,7 @@ export function useSpeechRecognition() {
       }
 
       recorder.onstop = async () => {
+        setPhase('transcribing')
         cleanupVad()
         setIsListening(false)
         releaseStream()
@@ -199,7 +200,6 @@ export function useSpeechRecognition() {
         }
 
         try {
-          setPhase('transcribing')
           const transcribeStartedAt = Date.now()
           const response = await transcribeAudio(audioBlob)
           setTranscribeDurationMs(response.durationMs ?? Date.now() - transcribeStartedAt)
