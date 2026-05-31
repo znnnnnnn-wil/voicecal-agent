@@ -189,12 +189,25 @@ public class CalendarEventServiceImpl implements CalendarEventService {
 
     private void ensureNoConflicts(LocalDateTime startTime, LocalDateTime endTime, Long excludeEventId) {
         if (startTime != null && startTime.equals(endTime)) {
+            ensureNoPointConflicts(startTime, excludeEventId);
             return;
         }
         ConflictCheckResponse response = calendarAvailabilityService.checkConflicts(
                 new ConflictCheckRequest(startTime, endTime, excludeEventId)
         );
         if (response.hasConflict()) {
+            throw CustomException.create(ResultCodeEnum.CALENDAR_EVENT_CONFLICT, "日程时间与已有日程冲突");
+        }
+    }
+
+    private void ensureNoPointConflicts(LocalDateTime pointTime, Long excludeEventId) {
+        if (pointTime == null) {
+            return;
+        }
+        boolean hasConflict = !calendarEventRepository
+                .findConflictsAtPoint(pointTime, excludeEventId, EventStatus.ACTIVE)
+                .isEmpty();
+        if (hasConflict) {
             throw CustomException.create(ResultCodeEnum.CALENDAR_EVENT_CONFLICT, "日程时间与已有日程冲突");
         }
     }

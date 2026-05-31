@@ -81,6 +81,31 @@ public interface CalendarEventRepository extends JpaRepository<CalendarEvent, Lo
     );
 
     /**
+     * 查询与指定时间点冲突的日程。
+     *
+     * @param pointTime 时间点
+     * @param excludeEventId 需要排除的日程 ID，可为空
+     * @param status 日程状态
+     * @return 与时间点冲突的日程列表
+     */
+    @Query("""
+            select event
+            from CalendarEvent event
+            where event.status = :status
+              and (:excludeEventId is null or event.id <> :excludeEventId)
+              and (
+                    (event.startTime = :pointTime and event.endTime = :pointTime)
+                    or (event.startTime < :pointTime and event.endTime > :pointTime)
+              )
+            order by event.startTime asc
+            """)
+    List<CalendarEvent> findConflictsAtPoint(
+            @Param("pointTime") LocalDateTime pointTime,
+            @Param("excludeEventId") Long excludeEventId,
+            @Param("status") EventStatus status
+    );
+
+    /**
      * 按关键词查询标题或描述匹配的日程。
      *
      * @param keyword 关键词
