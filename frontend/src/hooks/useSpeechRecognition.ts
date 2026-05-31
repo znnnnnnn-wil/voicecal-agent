@@ -3,7 +3,7 @@ import { transcribeAudio } from '../services/aiService'
 
 const VOICE_RECORDING_CONFIG = {
   silenceThreshold: 0.015,
-  silenceDurationMs: 700,
+  silenceDurationMs: 1000,
   minRecordingMs: 600,
   maxRecordingMs: 15_000,
   meterIntervalMs: 80,
