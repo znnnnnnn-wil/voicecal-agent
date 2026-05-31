@@ -7,6 +7,7 @@ import java.time.OffsetDateTime;
  *
  * @param <T> 响应数据类型
  */
+@SuppressWarnings("unused")
 public class ApiResponse<T> {
 
     private final boolean success;

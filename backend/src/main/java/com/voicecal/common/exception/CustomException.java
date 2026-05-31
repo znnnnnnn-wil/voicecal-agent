@@ -41,10 +41,6 @@ public class CustomException extends RuntimeException {
         return new CustomException(resultCodeEnum, message);
     }
 
-    public ResultCodeEnum getResultCodeEnum() {
-        return resultCodeEnum;
-    }
-
     public String getCode() {
         return resultCodeEnum.getCode();
     }
