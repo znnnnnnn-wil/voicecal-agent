@@ -37,7 +37,7 @@ const REMINDER_REFRESH_INTERVAL_MS = 15_000
 const REMINDER_TOAST_VISIBLE_MS = 10_000
 
 function App() {
-  const [command, setCommand] = useState('明天下午三点提醒我提交项目代码')
+  const [command, setCommand] = useState('')
   const [calendarEvents, setCalendarEvents] = useState<CalendarEvent[]>([])
   const [todayEvents, setTodayEvents] = useState<CalendarEvent[]>([])
   const [weekEvents, setWeekEvents] = useState<CalendarEvent[]>([])

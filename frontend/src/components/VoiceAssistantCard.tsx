@@ -60,7 +60,10 @@ function VoiceAssistantCard({
     stopListening,
     resetTranscript,
   } = useSpeechRecognition()
-  const { isSupported: isSpeechSupported, speak } = useSpeechSynthesis()
+  const { isSupported: isSpeechSupported, isSpeaking, speak, stop } = useSpeechSynthesis()
+  const [speechEnabled, setSpeechEnabled] = useState(() => {
+    return window.localStorage.getItem('voicecal:speech-enabled') !== 'false'
+  })
   const [lastSpokenReply, setLastSpokenReply] = useState('')
   const [lastSubmittedTranscript, setLastSubmittedTranscript] = useState('')
   const [lastAppliedTranscript, setLastAppliedTranscript] = useState('')
@@ -88,12 +91,19 @@ function VoiceAssistantCard({
   }, [isLoading, lastAppliedTranscript, lastSubmittedTranscript, onCommandChange, onLog, onRunCommand, transcript])
 
   useEffect(() => {
-    if (isSuccess && reply && isSpeechSupported && reply !== lastSpokenReply) {
+    if (isSuccess && reply && isSpeechSupported && speechEnabled && reply !== lastSpokenReply) {
       speak(reply)
       setLastSpokenReply(reply)
       onLog('Speech playback started', 'AI reply is being read aloud', 'info')
     }
-  }, [isSpeechSupported, isSuccess, lastSpokenReply, onLog, reply, speak])
+  }, [isSpeechSupported, isSuccess, lastSpokenReply, onLog, reply, speak, speechEnabled])
+
+  useEffect(() => {
+    window.localStorage.setItem('voicecal:speech-enabled', String(speechEnabled))
+    if (!speechEnabled) {
+      stop()
+    }
+  }, [speechEnabled, stop])
 
   const handleMicClick = () => {
     if (isListening) {
@@ -147,6 +157,32 @@ function VoiceAssistantCard({
           录音 {Math.round(recordingDurationMs / 1000)}s
           {transcribeDurationMs > 0 ? ` · 识别 ${transcribeDurationMs}ms` : ''}
         </p>
+      </div>
+
+      <div className="mt-3 flex items-center justify-between gap-3 rounded-xl border border-[#e5e7eb] bg-white px-3 py-2.5">
+        <div>
+          <p className="text-xs font-semibold text-[#202124]">语音播报</p>
+          <p className="mt-0.5 text-[11px] text-[#5f6368]">
+            {isSpeechSupported ? (speechEnabled ? (isSpeaking ? '正在朗读 AI 回复' : 'AI 回复后自动朗读') : '已关闭自动朗读') : '当前浏览器不支持播报'}
+          </p>
+        </div>
+        <button
+          aria-checked={speechEnabled}
+          aria-label={speechEnabled ? '关闭语音播报' : '打开语音播报'}
+          className={`relative h-7 w-12 rounded-full transition focus:outline-none focus:ring-2 focus:ring-[#1a73e8] focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 ${
+            speechEnabled ? 'bg-[#1a73e8]' : 'bg-slate-300'
+          }`}
+          disabled={!isSpeechSupported}
+          onClick={() => setSpeechEnabled((enabled) => !enabled)}
+          role="switch"
+          type="button"
+        >
+          <span
+            className={`absolute top-1 size-5 rounded-full bg-white shadow-sm transition ${
+              speechEnabled ? 'left-6' : 'left-1'
+            }`}
+          />
+        </button>
       </div>
 
       {(recognitionError || error) && (
