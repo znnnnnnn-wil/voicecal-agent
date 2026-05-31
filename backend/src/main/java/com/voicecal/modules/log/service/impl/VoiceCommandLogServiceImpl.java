@@ -62,6 +62,19 @@ public class VoiceCommandLogServiceImpl implements VoiceCommandLogService {
                 .toList();
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public List<VoiceCommandLogResponse> getRecentLogs(String conversationId, Integer limit) {
+        int resolvedLimit = resolveLimit(limit);
+        return voiceCommandLogRepository.findByConversationIdOrderByCreatedAtDescIdDesc(
+                        resolveConversationId(conversationId),
+                        PageRequest.of(0, resolvedLimit)
+                )
+                .stream()
+                .map(VoiceCommandLogResponse::from)
+                .toList();
+    }
+
     private String resolveConversationId(String conversationId) {
         if (conversationId == null || conversationId.isBlank()) {
             return DEFAULT_CONVERSATION_ID;
