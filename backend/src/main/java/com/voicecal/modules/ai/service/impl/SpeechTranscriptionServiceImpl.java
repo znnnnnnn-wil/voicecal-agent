@@ -52,7 +52,7 @@ public class SpeechTranscriptionServiceImpl implements SpeechTranscriptionServic
     ) {
         this.objectMapper = objectMapper;
         this.baseUrl = baseUrl;
-        this.apiKey = apiKey;
+        this.apiKey = apiKey == null ? "" : apiKey.trim();
         this.modelName = modelName;
         this.timeoutSeconds = timeoutSeconds;
         this.maxAudioBytes = maxAudioBytes;

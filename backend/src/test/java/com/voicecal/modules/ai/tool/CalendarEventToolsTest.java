@@ -1,5 +1,6 @@
 package com.voicecal.modules.ai.tool;
 
+import com.voicecal.common.enums.dao.EventCategory;
 import com.voicecal.common.enums.dao.EventStatus;
 import com.voicecal.dao.entity.CalendarEvent;
 import com.voicecal.dao.repository.CalendarEventRepository;
@@ -209,6 +210,19 @@ class CalendarEventToolsTest {
 
         assertThat(result).contains("删除操作已拦截");
         assertThat(calendarEventRepository.findById(event.getId())).isPresent();
+    }
+
+    @Test
+    void deleteCalendarEvent_shouldAllowKaiHui_whenUserAsksToDeleteMeeting() {
+        CalendarEvent event = createEvent("开会", 15, 16);
+        event.setCategory(EventCategory.OTHER);
+        CalendarEvent savedEvent = calendarEventRepository.saveAndFlush(event);
+        AiRequestContext.setUserMessage("删除明天下午的会议");
+
+        String result = calendarEventTools.deleteCalendarEvent(savedEvent.getId());
+
+        assertThat(result).contains("删除日程成功", "开会");
+        assertThat(calendarEventRepository.findById(savedEvent.getId())).isEmpty();
     }
 
     @Test

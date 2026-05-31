@@ -6,6 +6,7 @@ import DailySummaryCard from './components/DailySummaryCard'
 import EventDetailPanel from './components/EventDetailPanel'
 import OperationLog from './components/OperationLog'
 import RecentReminders from './components/RecentReminders'
+import ReminderToastStack, { type ReminderToast } from './components/ReminderToastStack'
 import TodaySchedule from './components/TodaySchedule'
 import TopNav from './components/TopNav'
 import VoiceAssistantCard from './components/VoiceAssistantCard'
@@ -33,6 +34,7 @@ import type { Reminder } from './types/reminder'
 const initialReply =
   '我可以帮你创建、查询、整理日程，也可以处理提醒、冲突检测、空闲时间查询和 ICS 导出。'
 const REMINDER_REFRESH_INTERVAL_MS = 15_000
+const REMINDER_TOAST_VISIBLE_MS = 10_000
 
 function App() {
   const [command, setCommand] = useState('明天下午三点提醒我提交项目代码')
@@ -65,6 +67,11 @@ function App() {
   const [isUsingDemoReminders, setIsUsingDemoReminders] = useState(false)
   const [logs, setLogs] = useState<VoiceCommandLog[]>([])
   const [recentReminders, setRecentReminders] = useState<Reminder[]>([])
+  const [reminderToasts, setReminderToasts] = useState<ReminderToast[]>([])
+  const knownReminderKeysRef = useRef<Set<string>>(new Set())
+  const hasInitializedReminderKeysRef = useRef(false)
+  const knownStartedEventKeysRef = useRef<Set<string>>(new Set())
+  const hasInitializedStartedEventKeysRef = useRef(false)
   const lastSubmitRef = useRef<{ text: string; time: number } | null>(null)
 
   const appendLog = useCallback((item: Omit<OperationLogItem, 'time'>) => {
@@ -77,6 +84,68 @@ function App() {
     },
     [appendLog],
   )
+
+  const syncReminderToasts = useCallback((reminders: Reminder[], shouldNotifyNewReminders: boolean) => {
+    const nextKeys = new Set(reminders.map(getReminderKey))
+    if (!hasInitializedReminderKeysRef.current) {
+      knownReminderKeysRef.current = nextKeys
+      hasInitializedReminderKeysRef.current = true
+      return
+    }
+
+    if (shouldNotifyNewReminders) {
+      const newReminders = reminders.filter((reminder) => !knownReminderKeysRef.current.has(getReminderKey(reminder)))
+      if (newReminders.length > 0) {
+        setReminderToasts((current) => {
+          const currentKeys = new Set(current.map((reminder) => reminder.toastId))
+          const incoming = newReminders.map((reminder) => ({
+            toastId: getReminderKey(reminder),
+            title: reminder.title,
+            startTime: reminder.startTime,
+            label: '日程提醒',
+          }))
+          return [...incoming.filter((reminder) => !currentKeys.has(reminder.toastId)), ...current].slice(0, 4)
+        })
+      }
+    }
+
+    knownReminderKeysRef.current = nextKeys
+  }, [])
+
+  const syncStartedEventToasts = useCallback((events: CalendarEvent[], shouldNotifyNewEvents: boolean) => {
+    const now = Date.now()
+    const startedEvents = events.filter((event) => {
+      const startTime = new Date(event.startTime).getTime()
+      return Number.isFinite(startTime) && startTime <= now
+    })
+    const nextKeys = new Set(startedEvents.map(getStartedEventKey))
+
+    if (!hasInitializedStartedEventKeysRef.current) {
+      knownStartedEventKeysRef.current = nextKeys
+      hasInitializedStartedEventKeysRef.current = true
+      return
+    }
+
+    if (shouldNotifyNewEvents) {
+      const newStartedEvents = startedEvents.filter(
+        (event) => !knownStartedEventKeysRef.current.has(getStartedEventKey(event)),
+      )
+      if (newStartedEvents.length > 0) {
+        setReminderToasts((current) => {
+          const currentKeys = new Set(current.map((reminder) => reminder.toastId))
+          const incoming = newStartedEvents.map((event) => ({
+            toastId: getStartedEventKey(event),
+            title: event.title,
+            startTime: event.startTime,
+            label: '日程开始',
+          }))
+          return [...incoming.filter((reminder) => !currentKeys.has(reminder.toastId)), ...current].slice(0, 4)
+        })
+      }
+    }
+
+    knownStartedEventKeysRef.current = nextKeys
+  }, [])
 
   const loadCalendarEvents = useCallback(async () => {
     setIsCalendarLoading(true)
@@ -114,7 +183,9 @@ function App() {
     setRemindersError(null)
     setIsUsingDemoReminders(false)
     try {
-      setRecentReminders(await fetchRecentReminders(20))
+      const reminders = await fetchRecentReminders(20)
+      setRecentReminders(reminders)
+      syncReminderToasts(reminders, false)
     } catch (error) {
       setRecentReminders(buildDemoReminders())
       setRemindersError(getErrorMessage(error))
@@ -122,7 +193,7 @@ function App() {
     } finally {
       setIsRemindersLoading(false)
     }
-  }, [])
+  }, [syncReminderToasts])
 
   const refreshReminderStateSilently = useCallback(async () => {
     try {
@@ -132,8 +203,10 @@ function App() {
         fetchTodayEvents(),
       ])
       setRecentReminders(reminders)
+      syncReminderToasts(reminders, true)
       setCalendarEvents(events)
       setTodayEvents(today)
+      syncStartedEventToasts(today, true)
       setRemindersError(null)
       setCalendarError(null)
       setTodayError(null)
@@ -143,14 +216,16 @@ function App() {
     } catch {
       // 后台刷新失败时保留当前页面数据，避免轮询造成闪烁或 fallback 抖动。
     }
-  }, [])
+  }, [syncReminderToasts, syncStartedEventToasts])
 
   const loadTodayEvents = useCallback(async () => {
     setIsTodayLoading(true)
     setTodayError(null)
     setIsUsingDemoToday(false)
     try {
-      setTodayEvents(await fetchTodayEvents())
+      const events = await fetchTodayEvents()
+      setTodayEvents(events)
+      syncStartedEventToasts(events, false)
     } catch (error) {
       setTodayEvents(demoTodayEvents)
       setTodayError(getErrorMessage(error))
@@ -220,6 +295,22 @@ function App() {
     return () => window.clearInterval(timer)
   }, [refreshReminderStateSilently])
 
+  useEffect(() => {
+    if (reminderToasts.length === 0) {
+      return
+    }
+
+    const timer = window.setTimeout(() => {
+      setReminderToasts((current) => current.slice(1))
+    }, REMINDER_TOAST_VISIBLE_MS)
+
+    return () => window.clearTimeout(timer)
+  }, [reminderToasts])
+
+  const dismissReminderToast = useCallback((toastId: string) => {
+    setReminderToasts((current) => current.filter((reminder) => reminder.toastId !== toastId))
+  }, [])
+
   const handleRunCommand = async (nextCommand?: string) => {
     const commandText = (nextCommand ?? command).trim()
     const now = Date.now()
@@ -265,6 +356,7 @@ function App() {
   return (
     <AppShell>
       <TopNav />
+      <ReminderToastStack reminders={reminderToasts} onDismiss={dismissReminderToast} />
       <main className="grid min-h-[calc(100vh-4rem)] grid-cols-1 gap-4 p-4 lg:grid-cols-[300px_minmax(0,1fr)] xl:grid-cols-[300px_minmax(0,1fr)_330px]">
         <aside className="space-y-4 lg:sticky lg:top-20 lg:max-h-[calc(100vh-6rem)] lg:overflow-y-auto">
           <button
@@ -345,6 +437,17 @@ function getErrorMessage(error: unknown) {
     return error.message
   }
   return '请求失败，请稍后重试。'
+}
+
+function getReminderKey(reminder: Reminder) {
+  if (reminder.reminderMinutes === 0) {
+    return `event:${reminder.eventId}:${reminder.startTime}`
+  }
+  return `${reminder.eventId}:${reminder.remindedAt ?? reminder.startTime}`
+}
+
+function getStartedEventKey(event: CalendarEvent) {
+  return `event:${event.id}:${event.startTime}`
 }
 
 function buildDemoLogs(): VoiceCommandLog[] {

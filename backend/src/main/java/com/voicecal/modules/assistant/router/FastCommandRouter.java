@@ -28,7 +28,16 @@ public class FastCommandRouter {
         if (containsAny(normalized, "本周日程", "这周有什么安排", "我这周有什么安排", "这周有哪些会议")) {
             return FastCommandRouteResult.matched(FastCommandType.WEEK_EVENTS);
         }
+        if (isFreeTimeQuery(normalized)) {
+            return FastCommandRouteResult.matched(FastCommandType.FREE_TIME);
+        }
         return FastCommandRouteResult.notMatched();
+    }
+
+    private boolean isFreeTimeQuery(String message) {
+        return containsAny(message, "有空吗", "有没有空", "有时间吗", "有没有时间", "空闲吗")
+                && containsAny(message, "今天", "明天", "后天", "本周", "这周", "下周", "周", "星期")
+                && containsAny(message, "上午", "中午", "下午", "晚上", "今晚", "白天");
     }
 
     private boolean isRiskyCommand(String message) {

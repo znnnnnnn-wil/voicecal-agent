@@ -39,7 +39,7 @@ public class CalendarEventCategoryResolver {
         if (containsAny(normalizedTitle, "面试", "interview")) {
             return EventCategory.INTERVIEW;
         }
-        if (containsAny(normalizedTitle, "会议", "评审", "周会", "meeting", "review", "sync", "standup")) {
+        if (containsAny(normalizedTitle, "会议", "开会", "评审", "周会", "例会", "晨会", "早会", "meeting", "review", "sync", "standup")) {
             return EventCategory.MEETING;
         }
         if (containsAny(normalizedTitle, "作业", "学习", "课程", "复习", "study", "homework", "class", "course")) {
