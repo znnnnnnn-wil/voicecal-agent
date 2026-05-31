@@ -4,8 +4,8 @@
 
 - [x] 执行 `mvn.cmd -f backend\pom.xml clean test`
 - [x] Spring Boot 测试上下文可正常加载
-- [x] H2 profile 可用于自动化测试
-- [x] 默认 H2 profile 可为本地 Demo 自动建表
+- [x] MySQL profile 可用于本地 Demo 和自动化测试
+- [x] 测试环境使用独立 MySQL 测试库
 - [x] 核心 API 路径与 Controller 保持一致
 - [x] 不依赖真实外部 LLM API
 - [x] 未提交硬编码 API Key、token、secret
@@ -18,7 +18,7 @@
 - [x] Daily Summary
 - [x] 冲突检测
 - [x] 空闲时间查询
-- [x] PendingAction 确认机制
+- [x] AI 修改和删除日程
 - [x] VoiceCommandLog
 - [x] Reminder 扫描与最近提醒查询
 - [x] ICS 单事件导出与范围导出
@@ -46,7 +46,7 @@
 - [ ] 查询每日摘要
 - [ ] 冲突检测
 - [ ] 空闲时间查询
-- [ ] 危险操作确认
+- [ ] AI 修改和删除日程
 - [ ] 操作日志展示
 - [ ] 提醒状态展示
 - [ ] 单个日程 ICS 导出
