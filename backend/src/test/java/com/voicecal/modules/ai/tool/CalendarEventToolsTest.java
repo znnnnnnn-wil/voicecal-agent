@@ -16,7 +16,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 /**
  * 日程工具集成测试。
  */
-@ActiveProfiles("mysql")
+@ActiveProfiles("test")
 @SpringBootTest(properties = {
         "spring.jpa.hibernate.ddl-auto=create-drop"
 })
