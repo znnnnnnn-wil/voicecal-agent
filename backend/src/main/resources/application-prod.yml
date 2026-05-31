@@ -1,0 +1,30 @@
+server:
+  port: ${PROD_SERVER_PORT}
+
+spring:
+  datasource:
+    url: jdbc:mysql://${PROD_MYSQL_HOST}:${PROD_MYSQL_PORT}/${PROD_MYSQL_DATABASE_NAME}?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    username: ${PROD_MYSQL_USERNAME}
+    password: ${PROD_MYSQL_PASSWORD}
+    hikari:
+      pool-name: VoiceCalProdHikariPool
+      maximum-pool-size: ${PROD_MYSQL_MAX_POOL_SIZE:16}
+      minimum-idle: ${PROD_MYSQL_MIN_IDLE:5}
+      connection-timeout: ${PROD_MYSQL_CONNECTION_TIMEOUT:10000}
+      validation-timeout: ${PROD_MYSQL_VALIDATION_TIMEOUT:3000}
+      max-lifetime: ${PROD_MYSQL_MAX_LIFETIME:1800000}
+      idle-timeout: ${PROD_MYSQL_IDLE_TIMEOUT:600000}
+      keepalive-time: ${PROD_MYSQL_KEEPALIVE_TIME:30000}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: false
+        dialect: org.hibernate.dialect.MySQLDialect
+
+logging:
+  level:
+    com.voicecal: INFO

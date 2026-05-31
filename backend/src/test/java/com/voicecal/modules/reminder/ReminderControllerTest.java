@@ -19,7 +19,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 /**
  * 日程提醒接口集成测试。
  */
-@ActiveProfiles("mysql")
+@ActiveProfiles("test")
 @AutoConfigureMockMvc
 @SpringBootTest(properties = {
         "spring.jpa.hibernate.ddl-auto=create-drop"

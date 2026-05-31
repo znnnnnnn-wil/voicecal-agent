@@ -15,7 +15,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 /**
  * 语音命令操作日志服务集成测试。
  */
-@ActiveProfiles("mysql")
+@ActiveProfiles("test")
 @SpringBootTest(properties = {
         "spring.jpa.hibernate.ddl-auto=create-drop"
 })
