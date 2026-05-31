@@ -20,7 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/calendar/events")
 public class IcsExportController {
 
-    private static final MediaType TEXT_CALENDAR = new MediaType("text", "calendar", java.nio.charset.StandardCharsets.UTF_8);
+    private static final MediaType TEXT_CALENDAR = MediaType.parseMediaType("text/calendar; charset=UTF-8");
 
     private final IcsExportService icsExportService;
 
