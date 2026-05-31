@@ -13,7 +13,7 @@ Calendar Service / AI Service / Log Service / Reminder Scheduler
   ↓
 Spring Data JPA
   ↓
-H2 / MySQL
+MySQL
 ```
 
 前端负责语音输入、文本输入、日历可视化、摘要展示、日志展示和 Demo 交互反馈。后端负责日程业务、AI Tool Calling 编排、操作日志、提醒扫描、ICS 导出和统一 API 响应。
@@ -25,7 +25,7 @@ H2 / MySQL
 1. 用户在前端语音助手中输入语音或文本。
 2. 前端调用 `POST /api/ai/chat`。
 3. 后端 AI Chat Service 调用 LangChain4j Assistant；没有真实模型时返回 fallback 文案。
-4. 如果 Assistant 调用 Tool，Tool 会继续调用 Calendar Service 或 PendingAction Service。
+4. 如果 Assistant 调用 Tool，Tool 会继续调用 Calendar Service 或 CalendarAvailability Service。
 5. 后端返回 AI 回复，并记录 VoiceCommandLog。
 6. 前端展示回复，触发语音播报，并刷新日历、摘要、提醒和操作日志区域。
 
@@ -38,9 +38,9 @@ VoiceCalAssistant
   ↓
 CalendarEventTools
   ↓
-CalendarEventService / CalendarAvailabilityService / PendingActionService
+CalendarEventService / CalendarAvailabilityService / IcsExportService
   ↓
-CalendarEventRepository / InMemoryPendingActionStore
+CalendarEventRepository
 ```
 
 当前 `VoiceCalAssistant` 仅在 Spring 容器中存在 `ChatModel` Bean 时创建。未配置模型时，AI Chat 接口不会调用真实外部模型，而是返回本地 fallback 文案，保证 Demo 和测试环境不依赖 API Key。
@@ -52,7 +52,7 @@ CalendarEventRepository / InMemoryPendingActionStore
 - 创建：校验标题、描述、开始/结束时间、地点、提醒分钟数和分类。
 - 查询：按开始时间升序返回日程，可按 `category` 轻量筛选。
 - 修改：复用更新请求校验，并保留或更新分类、提醒字段。
-- 删除：普通 REST CRUD 可直接删除；AI Tool 中的删除走 PendingAction 确认。
+- 删除：普通 REST CRUD 和目标明确的 AI 删除指令都会直接删除日程；目标不明确时应先澄清。
 - 分类：支持 `WORK`、`STUDY`、`LIFE`、`MEETING`、`INTERVIEW`、`OTHER`。
 - 提醒字段：事件响应包含 `reminderMinutes`、`reminderTriggered`、`remindedAt`。
 - ICS 导出：`IcsExportController` 调用 `IcsExportService` 生成 `text/calendar` 文件内容。
@@ -77,17 +77,15 @@ existing.endTime > requested.startTime
 4. 遍历忙碌事件并合并重叠或首尾相接的占用区间。
 5. 输出长度大于等于 `minMinutes` 的空闲区间。
 
-## 6. 危险操作确认流程
+## 6. AI 修改和删除流程
 
-AI Tool 不直接执行删除或高影响修改，而是使用 PendingAction：
+当前实现不再使用 PendingAction。AI Tool 会在识别到明确目标后直接调用 Calendar Service 执行修改或删除：
 
-1. 用户提出删除或修改意图。
-2. Tool 创建 `DELETE_EVENT` 或 `UPDATE_EVENT` 类型的 PendingAction。
-3. PendingAction 保存操作 ID、conversationId、payloadJson、目标摘要和过期时间。
-4. 用户明确确认后，调用 confirm 执行真实删除或修改。
-5. 用户取消或操作过期时，不执行任何日程变更。
-
-REST API 也提供待确认操作的查询、创建、确认和取消能力，便于后续前端扩展。
+1. 用户提出创建、修改或删除意图。
+2. Assistant 解析时间、标题、分类、提醒等关键信息。
+3. 目标明确时，CalendarEventTools 直接调用对应 Service 方法。
+4. 目标不明确或匹配多个候选时，应先让用户补充信息，再执行真实变更。
+5. 操作结果写入 VoiceCommandLog，并由前端刷新日历、摘要、提醒和日志区域。
 
 ## 7. 提醒扫描流程
 

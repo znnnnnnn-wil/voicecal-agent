@@ -24,14 +24,17 @@ public class IcsExportServiceImpl implements IcsExportService {
 
     private static final String CRLF = "\r\n";
     private static final int ICS_LINE_LIMIT = 75;
-    private static final DateTimeFormatter UTC_FORMATTER = DateTimeFormatter.ofPattern("yyyyMMdd'T'HHmmss'Z'");
+    private static final DateTimeFormatter UTC_FORMATTER =
+            DateTimeFormatter.ofPattern("yyyyMMdd'T'HHmmss'Z'").withZone(ZoneOffset.UTC);
 
     private final CalendarEventRepository calendarEventRepository;
     private final Clock clock;
+    private final ZoneId eventZoneId;
 
     public IcsExportServiceImpl(CalendarEventRepository calendarEventRepository, Clock clock) {
         this.calendarEventRepository = calendarEventRepository;
         this.clock = clock;
+        this.eventZoneId = ZoneId.systemDefault();
     }
 
     /**
@@ -85,7 +88,7 @@ public class IcsExportServiceImpl implements IcsExportService {
     private void appendEvent(StringBuilder builder, CalendarEvent event) {
         appendLine(builder, "BEGIN:VEVENT");
         appendLine(builder, "UID:event-" + event.getId() + "@voicecal-agent");
-        appendLine(builder, "DTSTAMP:" + formatAsUtc(LocalDateTime.now(clock)));
+        appendLine(builder, "DTSTAMP:" + formatNowAsUtc());
         appendLine(builder, "DTSTART:" + formatAsUtc(event.getStartTime()));
         appendLine(builder, "DTEND:" + formatAsUtc(event.getEndTime()));
         appendLine(builder, "SUMMARY:" + escapeText(event.getTitle()));
@@ -129,10 +132,12 @@ public class IcsExportServiceImpl implements IcsExportService {
                 .replace(",", "\\,");
     }
 
+    private String formatNowAsUtc() {
+        return UTC_FORMATTER.format(clock.instant());
+    }
+
     private String formatAsUtc(LocalDateTime value) {
-        return value.atZone(ZoneId.systemDefault())
-                .withZoneSameInstant(ZoneOffset.UTC)
-                .format(UTC_FORMATTER);
+        return UTC_FORMATTER.format(value.atZone(eventZoneId).withZoneSameInstant(ZoneOffset.UTC));
     }
 
     private void validateTimeRange(LocalDateTime startTime, LocalDateTime endTime) {

@@ -17,8 +17,7 @@
 常见错误：
 
 - `400`：参数缺失、格式错误、枚举值非法、时间范围非法。
-- `404`：日程或待确认操作不存在。
-- `410`：待确认操作已过期。
+- `404`：日程不存在。
 - `500`：服务端异常。
 
 时间字段使用 ISO-8601 `LocalDateTime` 格式，例如 `2026-06-01T10:00:00`。
@@ -104,7 +103,7 @@ Query 参数：
 
 用途：删除日程。
 
-说明：普通 REST CRUD 可直接删除；AI Tool 中的删除操作应走 PendingAction 确认流程。
+说明：普通 REST CRUD 可直接删除；AI 删除指令也会通过 Calendar Tools 直接执行。若目标不明确，应先由 AI 澄清目标后再执行。
 
 ## 3. 日期维度查询
 
@@ -240,67 +239,11 @@ Query 参数：
 GET /api/calendar/events/free-time?startTime=2026-06-01T13:00:00&endTime=2026-06-01T18:00:00&minMinutes=30
 ```
 
-## 8. PendingAction
+## 8. AI 日程操作
 
-### POST `/api/pending-actions/delete-event`
+AI 日程创建、修改、删除、冲突检测、空闲时间查询和 ICS 导出通过 LangChain4j Tool Calling 调用后端 Calendar Tools。
 
-用途：创建待确认删除日程操作，不直接删除日程。
-
-请求体：
-
-```json
-{
-  "conversationId": "demo",
-  "eventId": 1
-}
-```
-
-### POST `/api/pending-actions/update-event`
-
-用途：创建待确认更新日程操作，不直接修改日程。
-
-请求体：
-
-```json
-{
-  "conversationId": "demo",
-  "eventId": 1,
-  "updateRequest": {
-    "title": "更新后的会议",
-    "description": "调整会议时间",
-    "startTime": "2026-06-01T14:00:00",
-    "endTime": "2026-06-01T15:00:00",
-    "location": "Zoom",
-    "reminderMinutes": 10,
-    "category": "MEETING"
-  }
-}
-```
-
-### GET `/api/pending-actions`
-
-用途：查询指定对话下的待确认操作。
-
-Query 参数：
-
-- `conversationId`：可选，默认 `default`。
-
-### POST `/api/pending-actions/{id}/confirm`
-
-用途：确认并执行待确认操作。
-
-Query 参数：
-
-- `conversationId`：可选，默认 `default`。
-
-错误情况：
-
-- `404`：操作不存在或 conversationId 不匹配。
-- `410`：操作已过期。
-
-### POST `/api/pending-actions/{id}/cancel`
-
-用途：取消待确认操作，不执行真实日程变更。
+当前实现不再提供 PendingAction 确认接口。修改或删除指令会在目标明确时直接执行；如果用户表达不明确，例如同名日程有多个候选，AI 应先澄清目标，避免误删或误改。
 
 ## 9. 操作日志
 
