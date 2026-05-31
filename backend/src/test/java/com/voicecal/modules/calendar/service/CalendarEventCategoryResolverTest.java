@@ -18,6 +18,11 @@ class CalendarEventCategoryResolverTest {
     }
 
     @Test
+    void categoryInference_shouldTreatKaiHuiAsMeeting() {
+        assertThat(resolver.infer("明天下午开会")).isEqualTo(EventCategory.MEETING);
+    }
+
+    @Test
     void categoryInference_shouldReturnOther_whenTitleIsBlank() {
         assertThat(resolver.infer("  ")).isEqualTo(EventCategory.OTHER);
     }

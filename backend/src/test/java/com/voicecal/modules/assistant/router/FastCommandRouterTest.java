@@ -35,6 +35,13 @@ class FastCommandRouterTest {
     }
 
     @Test
+    void tryRoute_shouldNotHandlePlainCreateCommand() {
+        FastCommandRouteResult result = fastCommandRouter.tryRoute("明天下午三点开项目会");
+
+        assertThat(result.matched()).isFalse();
+    }
+
+    @Test
     void tryRoute_shouldNotHandleDeleteCommand() {
         FastCommandRouteResult result = fastCommandRouter.tryRoute("删除明天下午的会议");
 
@@ -42,9 +49,18 @@ class FastCommandRouterTest {
     }
 
     @Test
-    void tryRoute_shouldNotHandleFreeTimeCommand() {
+    void tryRoute_shouldMatchFreeTimeCommand() {
         FastCommandRouteResult result = fastCommandRouter.tryRoute("帮我查下周五下午有空吗？");
 
-        assertThat(result.matched()).isFalse();
+        assertThat(result.matched()).isTrue();
+        assertThat(result.type()).isEqualTo(FastCommandType.FREE_TIME);
+    }
+
+    @Test
+    void tryRoute_shouldMatchTomorrowAfternoonFreeTimeCommand() {
+        FastCommandRouteResult result = fastCommandRouter.tryRoute("明天下午有时间吗？");
+
+        assertThat(result.matched()).isTrue();
+        assertThat(result.type()).isEqualTo(FastCommandType.FREE_TIME);
     }
 }
