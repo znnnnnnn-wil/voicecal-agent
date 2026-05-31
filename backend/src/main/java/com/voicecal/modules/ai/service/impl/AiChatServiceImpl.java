@@ -38,7 +38,7 @@ public class AiChatServiceImpl implements AiChatService {
     private static final String ROUTED_BY_FAST_RULE = "FAST_RULE";
     private static final String ROUTED_BY_LLM = "LLM";
     private static final String DEFAULT_CONVERSATION_ID = "default";
-    private static final int CONTEXT_LOG_LIMIT = 3;
+    private static final int CONTEXT_LOG_LIMIT = 5;
     private static final ZoneId DEFAULT_ZONE_ID = ZoneId.of(CalendarEvent.DEFAULT_TIMEZONE);
 
     private final ObjectProvider<VoiceCalAssistant> voiceCalAssistantProvider;
@@ -219,16 +219,19 @@ public class AiChatServiceImpl implements AiChatService {
                 - 明天日期：%s
                 - 当前时区：%s
                 - 请基于上述日期解析“今天、明天、后天、下周”等相对时间。
+                - 中文下午时间必须按 24 小时制正确换算：“下午一点”是 13:00，“下午两点”是 14:00，“下午三点”是 15:00，“下午四点”是 16:00，以此类推到“下午十一点”是 23:00。
+                - 用户说“明天下午四点提醒我睡觉”时，startTime 必须是明天 16:00，不是 15:00。
                 - 如果用户要求“提醒我”且没有说明提前多久提醒，创建日程时 reminderMinutes 使用 0。
                 - 如果用户给出明确未来时间和行动事项，例如“七点起床”“明天五点写作业”“八点开会”，即使没说“提醒我”，也按到点提醒事项处理，创建日程时 reminderMinutes 使用 0。
                 - 如果用户没有说明结束时间或持续时间，不要默认 30 分钟；创建日程时 endTime 使用和 startTime 相同的时间，表示这是一个时间点事项。
-                - 如果用户明确要求删除或修改日程，直接调用删除或修改工具执行，不要要求二次确认。
+                - 删除、修改日程属于重要操作，不能在用户首次提出时直接执行；必须先列出将要删除或修改的目标日程，并询问用户是否确认。
+                - 只有当用户在最近上下文后明确回复“确认、确定、是的、执行、删除吧、修改吧”等确认语义时，才可以调用删除或修改工具。
                 - 如果用户要求按时间范围导出 ICS，请先把时间范围解析为 ISO-8601 LocalDateTime，再调用 ICS 导出工具。
                 - ICS 导出工具返回下载链接后，请把链接原样回复给用户，方便前端渲染下载入口。
                 - 用户说“删除会议”时，只能匹配标题、描述或分类明确为会议的日程；标题或描述包含“会议、开会、晨会、例会、周会、评审、meeting、review、sync、standup”都应视为会议。
                 - 不要把提醒、任务、提交代码、学习、看展览等非会议日程当成会议删除。
                 - 如果没有明确匹配的会议，回复用户没有找到匹配会议，并请用户补充标题或时间。
-                - 如果用户只回复“凌晨”“下午”“是的”等简短信息，必须结合下方最近对话上下文理解，不要把它当成全新指令。
+                - 如果用户只回复“凌晨”“下午”“是的”“确认”等简短信息，必须结合下方最近对话上下文理解，不要把它当成全新指令。
 
                 最近对话上下文：
                 %s

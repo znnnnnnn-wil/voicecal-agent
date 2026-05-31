@@ -107,6 +107,8 @@ class AiChatServiceImplTest {
                 .contains("当前日期时间")
                 .contains("明天日期")
                 .contains("当前时区：Asia/Shanghai")
+                .contains("下午四点")
+                .contains("16:00")
                 .contains("reminderMinutes 使用 0")
                 .contains("明天下午三点提醒我提交项目代码");
     }
@@ -129,7 +131,7 @@ class AiChatServiceImplTest {
         );
         when(fastCommandRouter.tryRoute("凌晨")).thenReturn(FastCommandRouteResult.notMatched());
         when(assistantProvider.getIfAvailable()).thenReturn(assistant);
-        when(logService.getRecentLogs("demo", 3)).thenReturn(List.of(new VoiceCommandLogResponse(
+        when(logService.getRecentLogs("demo", 5)).thenReturn(List.of(new VoiceCommandLogResponse(
                 1L,
                 "demo",
                 "下周一晚上两点要开会",
