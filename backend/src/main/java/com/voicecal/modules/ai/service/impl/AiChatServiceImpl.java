@@ -109,8 +109,8 @@ public class AiChatServiceImpl implements AiChatService {
 
     private String formatFreeTime(String message, LocalDate today) {
         LocalDate date = resolveFreeTimeDate(message, today);
-        LocalTime start = message.contains("晚上") || message.contains("今晚") ? LocalTime.of(18, 0) : LocalTime.of(13, 0);
-        LocalTime end = message.contains("晚上") || message.contains("今晚") ? LocalTime.of(22, 0) : LocalTime.of(18, 0);
+        LocalTime start = resolveFreeTimeStart(message);
+        LocalTime end = resolveFreeTimeEnd(message);
         List<FreeTimeSlotResponse> slots = calendarAvailabilityService.findFreeTimeSlots(
                 new FreeTimeQueryRequest(date.atTime(start), date.atTime(end), 30)
         );
@@ -124,13 +124,77 @@ public class AiChatServiceImpl implements AiChatService {
     }
 
     private LocalDate resolveFreeTimeDate(String message, LocalDate today) {
+        if (message.contains("后天")) {
+            return today.plusDays(2);
+        }
         if (message.contains("明天")) {
             return today.plusDays(1);
         }
-        if (message.contains("周五") || message.contains("星期五")) {
-            return today.with(TemporalAdjusters.nextOrSame(DayOfWeek.FRIDAY));
+        DayOfWeek dayOfWeek = resolveDayOfWeek(message);
+        if (dayOfWeek != null) {
+            if (message.contains("下周")) {
+                return today.with(TemporalAdjusters.next(DayOfWeek.MONDAY)).with(TemporalAdjusters.nextOrSame(dayOfWeek));
+            }
+            return today.with(TemporalAdjusters.nextOrSame(dayOfWeek));
         }
         return today;
+    }
+
+    private DayOfWeek resolveDayOfWeek(String message) {
+        if (message.contains("周一") || message.contains("星期一")) {
+            return DayOfWeek.MONDAY;
+        }
+        if (message.contains("周二") || message.contains("星期二")) {
+            return DayOfWeek.TUESDAY;
+        }
+        if (message.contains("周三") || message.contains("星期三")) {
+            return DayOfWeek.WEDNESDAY;
+        }
+        if (message.contains("周四") || message.contains("星期四")) {
+            return DayOfWeek.THURSDAY;
+        }
+        if (message.contains("周五") || message.contains("星期五")) {
+            return DayOfWeek.FRIDAY;
+        }
+        if (message.contains("周六") || message.contains("星期六")) {
+            return DayOfWeek.SATURDAY;
+        }
+        if (message.contains("周日") || message.contains("周天") || message.contains("星期日") || message.contains("星期天")) {
+            return DayOfWeek.SUNDAY;
+        }
+        return null;
+    }
+
+    private LocalTime resolveFreeTimeStart(String message) {
+        if (message.contains("上午")) {
+            return LocalTime.of(9, 0);
+        }
+        if (message.contains("中午")) {
+            return LocalTime.of(12, 0);
+        }
+        if (message.contains("晚上") || message.contains("今晚")) {
+            return LocalTime.of(18, 0);
+        }
+        if (message.contains("白天")) {
+            return LocalTime.of(9, 0);
+        }
+        return LocalTime.of(13, 0);
+    }
+
+    private LocalTime resolveFreeTimeEnd(String message) {
+        if (message.contains("上午")) {
+            return LocalTime.of(12, 0);
+        }
+        if (message.contains("中午")) {
+            return LocalTime.of(14, 0);
+        }
+        if (message.contains("晚上") || message.contains("今晚")) {
+            return LocalTime.of(22, 0);
+        }
+        if (message.contains("白天")) {
+            return LocalTime.of(18, 0);
+        }
+        return LocalTime.of(18, 0);
     }
 
     private String formatEvents(String title, List<CalendarEventResponse> events) {
@@ -161,7 +225,8 @@ public class AiChatServiceImpl implements AiChatService {
                 - 如果用户明确要求删除或修改日程，直接调用删除或修改工具执行，不要要求二次确认。
                 - 如果用户要求按时间范围导出 ICS，请先把时间范围解析为 ISO-8601 LocalDateTime，再调用 ICS 导出工具。
                 - ICS 导出工具返回下载链接后，请把链接原样回复给用户，方便前端渲染下载入口。
-                - 用户说“删除会议”时，只能匹配标题、描述或分类明确为会议的日程；不要把提醒、任务、提交代码、学习等非会议日程当成会议删除。
+                - 用户说“删除会议”时，只能匹配标题、描述或分类明确为会议的日程；标题或描述包含“会议、开会、晨会、例会、周会、评审、meeting、review、sync、standup”都应视为会议。
+                - 不要把提醒、任务、提交代码、学习、看展览等非会议日程当成会议删除。
                 - 如果没有明确匹配的会议，回复用户没有找到匹配会议，并请用户补充标题或时间。
                 - 如果用户只回复“凌晨”“下午”“是的”等简短信息，必须结合下方最近对话上下文理解，不要把它当成全新指令。
 

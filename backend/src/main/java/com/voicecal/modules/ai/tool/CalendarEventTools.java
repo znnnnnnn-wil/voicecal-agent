@@ -292,6 +292,10 @@ public class CalendarEventTools {
                 + " "
                 + (event.description() == null ? "" : event.description())).toLowerCase();
         return text.contains("会议")
+                || text.contains("开会")
+                || text.contains("例会")
+                || text.contains("晨会")
+                || text.contains("早会")
                 || text.contains("meeting")
                 || text.contains("review")
                 || text.contains("sync")
