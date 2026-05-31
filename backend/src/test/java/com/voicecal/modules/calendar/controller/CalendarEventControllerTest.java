@@ -35,7 +35,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 /**
  * 日历事件 CRUD API 集成测试。
  */
-@ActiveProfiles("h2")
+@ActiveProfiles("mysql")
 @AutoConfigureMockMvc
 @SpringBootTest(properties = {
         "spring.jpa.hibernate.ddl-auto=create-drop"

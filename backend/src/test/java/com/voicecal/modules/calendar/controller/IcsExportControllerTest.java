@@ -24,7 +24,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 /**
  * ICS 导出接口集成测试。
  */
-@ActiveProfiles("h2")
+@ActiveProfiles("mysql")
 @AutoConfigureMockMvc
 @SpringBootTest(properties = {
         "spring.jpa.hibernate.ddl-auto=create-drop"

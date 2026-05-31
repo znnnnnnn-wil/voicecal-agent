@@ -34,13 +34,13 @@ class HealthControllerTest {
     @Test
     void healthShouldReturnUpStatus() throws Exception {
         when(healthService.getHealthStatus())
-                .thenReturn(new HealthResponse("UP", OffsetDateTime.parse("2026-05-29T11:00:00+08:00"), "h2"));
+                .thenReturn(new HealthResponse("UP", OffsetDateTime.parse("2026-05-29T11:00:00+08:00"), "mysql"));
 
         mockMvc.perform(get("/api/health"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.code").value("OK"))
                 .andExpect(jsonPath("$.data.status").value("UP"))
-                .andExpect(jsonPath("$.data.profile").value("h2"));
+                .andExpect(jsonPath("$.data.profile").value("mysql"));
     }
 }

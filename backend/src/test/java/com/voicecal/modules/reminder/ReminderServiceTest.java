@@ -22,7 +22,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 /**
  * 日程提醒服务集成测试。
  */
-@ActiveProfiles("h2")
+@ActiveProfiles("mysql")
 @SpringBootTest(properties = {
         "spring.jpa.hibernate.ddl-auto=create-drop"
 })

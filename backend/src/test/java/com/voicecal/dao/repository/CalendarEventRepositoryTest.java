@@ -16,7 +16,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 /**
  * 日程事件 Repository 测试，验证基础数据访问能力。
  */
-@ActiveProfiles("h2")
+@ActiveProfiles("mysql")
 @DataJpaTest(properties = {
         "spring.jpa.hibernate.ddl-auto=create-drop"
 })

@@ -22,7 +22,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 /**
  * 语音识别接口集成测试。
  */
-@ActiveProfiles("h2")
+@ActiveProfiles("mysql")
 @AutoConfigureMockMvc
 @SpringBootTest(properties = {
         "voicecal.ai.qwen.api-key=",
