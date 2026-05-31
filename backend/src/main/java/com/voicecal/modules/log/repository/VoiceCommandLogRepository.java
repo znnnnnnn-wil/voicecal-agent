@@ -17,4 +17,13 @@ public interface VoiceCommandLogRepository extends JpaRepository<VoiceCommandLog
      * @return 日志分页结果
      */
     Page<VoiceCommandLog> findAllByOrderByCreatedAtDescIdDesc(Pageable pageable);
+
+    /**
+     * 按对话 ID 查询最近日志。
+     *
+     * @param conversationId 对话 ID
+     * @param pageable 分页参数
+     * @return 指定对话的日志分页结果
+     */
+    Page<VoiceCommandLog> findByConversationIdOrderByCreatedAtDescIdDesc(String conversationId, Pageable pageable);
 }

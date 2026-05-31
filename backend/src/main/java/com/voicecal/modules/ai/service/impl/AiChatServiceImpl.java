@@ -14,12 +14,14 @@ import com.voicecal.modules.calendar.entity.response.CalendarEventResponse;
 import com.voicecal.modules.calendar.entity.response.FreeTimeSlotResponse;
 import com.voicecal.modules.calendar.service.CalendarAvailabilityService;
 import com.voicecal.modules.calendar.service.CalendarEventQueryService;
+import com.voicecal.modules.log.response.VoiceCommandLogResponse;
 import com.voicecal.modules.log.service.VoiceCommandLogService;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.ZoneId;
+import java.util.Comparator;
 import java.util.List;
 import java.time.temporal.TemporalAdjusters;
 import org.springframework.beans.factory.ObjectProvider;
@@ -35,6 +37,8 @@ public class AiChatServiceImpl implements AiChatService {
             + "VoiceCal calendar tools are registered and ready for use when a chat model is configured.";
     private static final String ROUTED_BY_FAST_RULE = "FAST_RULE";
     private static final String ROUTED_BY_LLM = "LLM";
+    private static final String DEFAULT_CONVERSATION_ID = "default";
+    private static final int CONTEXT_LOG_LIMIT = 3;
     private static final ZoneId DEFAULT_ZONE_ID = ZoneId.of(CalendarEvent.DEFAULT_TIMEZONE);
 
     private final ObjectProvider<VoiceCalAssistant> voiceCalAssistantProvider;
@@ -80,7 +84,7 @@ public class AiChatServiceImpl implements AiChatService {
             } else {
                 AiRequestContext.setUserMessage(request.message());
                 try {
-                    reply = assistant.chat(buildContextualMessage(request.message()));
+                    reply = assistant.chat(buildContextualMessage(request));
                 } finally {
                     AiRequestContext.clear();
                 }
@@ -139,10 +143,11 @@ public class AiChatServiceImpl implements AiChatService {
                 .orElse("");
     }
 
-    private String buildContextualMessage(String userMessage) {
+    private String buildContextualMessage(AiChatRequest request) {
         LocalDateTime now = LocalDateTime.now(DEFAULT_ZONE_ID);
         LocalDate today = now.toLocalDate();
         LocalDate tomorrow = today.plusDays(1);
+        String conversationContext = buildConversationContext(request.conversationId());
         return """
                 系统上下文：
                 - 当前日期时间：%s
@@ -158,10 +163,42 @@ public class AiChatServiceImpl implements AiChatService {
                 - ICS 导出工具返回下载链接后，请把链接原样回复给用户，方便前端渲染下载入口。
                 - 用户说“删除会议”时，只能匹配标题、描述或分类明确为会议的日程；不要把提醒、任务、提交代码、学习等非会议日程当成会议删除。
                 - 如果没有明确匹配的会议，回复用户没有找到匹配会议，并请用户补充标题或时间。
+                - 如果用户只回复“凌晨”“下午”“是的”等简短信息，必须结合下方最近对话上下文理解，不要把它当成全新指令。
+
+                最近对话上下文：
+                %s
 
                 用户原始消息：
                 %s
-                """.formatted(now, today, tomorrow, DEFAULT_ZONE_ID, userMessage);
+                """.formatted(now, today, tomorrow, DEFAULT_ZONE_ID, conversationContext, request.message());
+    }
+
+    private String buildConversationContext(String conversationId) {
+        List<VoiceCommandLogResponse> logs;
+        try {
+            logs = voiceCommandLogService.getRecentLogs(resolveConversationId(conversationId), CONTEXT_LOG_LIMIT);
+        } catch (RuntimeException exception) {
+            return "无";
+        }
+        if (logs == null || logs.isEmpty()) {
+            return "无";
+        }
+        return logs.stream()
+                .sorted(Comparator.comparing(VoiceCommandLogResponse::createdAt))
+                .map(log -> "- 用户：" + log.rawText() + "\n  助手：" + nullToEmpty(log.assistantReply()))
+                .reduce((left, right) -> left + "\n" + right)
+                .orElse("无");
+    }
+
+    private String resolveConversationId(String conversationId) {
+        if (conversationId == null || conversationId.isBlank()) {
+            return DEFAULT_CONVERSATION_ID;
+        }
+        return conversationId;
+    }
+
+    private String nullToEmpty(String value) {
+        return value == null ? "" : value;
     }
 
     private void saveLogSafely(AiChatRequest request, String assistantReply, boolean success, String intent) {

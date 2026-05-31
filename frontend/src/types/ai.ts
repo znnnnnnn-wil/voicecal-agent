@@ -10,6 +10,7 @@ export type DailySummaryEvent = {
 
 export type AiChatRequest = {
   message: string
+  conversationId?: string
 }
 
 export type AiChatResponse = {

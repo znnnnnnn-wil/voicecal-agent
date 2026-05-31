@@ -39,4 +39,13 @@ public interface VoiceCommandLogService {
      * @return 最近日志列表
      */
     List<VoiceCommandLogResponse> getRecentLogs(Integer limit);
+
+    /**
+     * 查询指定对话的最近日志。
+     *
+     * @param conversationId 对话 ID
+     * @param limit 数量限制
+     * @return 指定对话的最近日志列表
+     */
+    List<VoiceCommandLogResponse> getRecentLogs(String conversationId, Integer limit);
 }

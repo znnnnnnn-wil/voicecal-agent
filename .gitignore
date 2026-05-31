@@ -7,3 +7,6 @@ dist/
 .env
 .env.local
 *.tsbuildinfo
+logs/
+backend/logs/
+*.log
