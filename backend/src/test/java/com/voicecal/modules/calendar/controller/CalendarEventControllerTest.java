@@ -315,6 +315,24 @@ class CalendarEventControllerTest {
     }
 
     @Test
+    void createEvent_shouldReturnBadRequest_whenPointInTimeEventFallsAtExistingEventStart() throws Exception {
+        calendarEventRepository.saveAndFlush(createEvent("已有会议", 14, 15));
+        Map<String, Object> request = validRequest(
+                "冲突会议",
+                "落在已有会议开始时间",
+                "2026-05-29T14:00:00",
+                "2026-05-29T14:00:00",
+                "线上"
+        );
+
+        mockMvc.perform(post("/api/calendar/events")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("日程时间与已有日程冲突"));
+    }
+
+    @Test
     void createEvent_shouldReturnBadRequest_whenEndTimeIsBeforeStartTime() throws Exception {
         Map<String, Object> request = validRequest(
                 "无效时间会议",

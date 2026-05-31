@@ -95,7 +95,7 @@ public interface CalendarEventRepository extends JpaRepository<CalendarEvent, Lo
               and (:excludeEventId is null or event.id <> :excludeEventId)
               and (
                     (event.startTime = :pointTime and event.endTime = :pointTime)
-                    or (event.startTime < :pointTime and event.endTime > :pointTime)
+                    or (event.startTime <= :pointTime and event.endTime > :pointTime)
               )
             order by event.startTime asc
             """)
