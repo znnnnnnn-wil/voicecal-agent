@@ -1,6 +1,6 @@
 package com.voicecal.modules.ai.service;
 
-import com.voicecal.modules.ai.response.DailySummaryResponse;
+import com.voicecal.modules.ai.entity.response.DailySummaryResponse;
 
 /**
  * 每日摘要服务接口。

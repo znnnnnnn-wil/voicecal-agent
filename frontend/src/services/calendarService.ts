@@ -1,4 +1,4 @@
-import { apiGet } from '../lib/apiClient'
+import { apiDelete, apiGet } from '../lib/apiClient'
 import type { CalendarEvent } from '../types/calendar'
 
 const DEFAULT_TIMEZONE = 'Asia/Shanghai'
@@ -13,6 +13,10 @@ export function getTodayEvents(timezone = DEFAULT_TIMEZONE) {
 
 export function getWeekEvents(timezone = DEFAULT_TIMEZONE) {
   return apiGet<CalendarEvent[]>(`/api/calendar/events/week${buildQuery({ timezone })}`)
+}
+
+export function deleteCalendarEvent(eventId: number) {
+  return apiDelete<void>(`/api/calendar/events/${eventId}`)
 }
 
 function buildQuery(params: Record<string, string | undefined>) {

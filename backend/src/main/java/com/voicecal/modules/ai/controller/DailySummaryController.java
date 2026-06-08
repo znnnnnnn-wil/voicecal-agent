@@ -1,7 +1,7 @@
 package com.voicecal.modules.ai.controller;
 
 import com.voicecal.common.response.ApiResponse;
-import com.voicecal.modules.ai.response.DailySummaryResponse;
+import com.voicecal.modules.ai.entity.response.DailySummaryResponse;
 import com.voicecal.modules.ai.service.DailySummaryService;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;

@@ -1,8 +1,8 @@
 package com.voicecal.modules.ai.controller;
 
 import com.voicecal.common.response.ApiResponse;
-import com.voicecal.modules.ai.request.AiChatRequest;
-import com.voicecal.modules.ai.response.AiChatResponse;
+import com.voicecal.modules.ai.entity.request.AiChatRequest;
+import com.voicecal.modules.ai.entity.response.AiChatResponse;
 import com.voicecal.modules.ai.service.AiChatService;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.PostMapping;

@@ -1,8 +1,8 @@
 package com.voicecal.modules.ai.service.impl;
 
 import com.voicecal.common.enums.dao.EventCategory;
-import com.voicecal.modules.ai.response.DailySummaryEventResponse;
-import com.voicecal.modules.ai.response.DailySummaryResponse;
+import com.voicecal.modules.ai.entity.response.DailySummaryEventResponse;
+import com.voicecal.modules.ai.entity.response.DailySummaryResponse;
 import com.voicecal.modules.ai.service.DailySummaryService;
 import com.voicecal.modules.calendar.entity.response.CalendarEventResponse;
 import com.voicecal.modules.calendar.service.CalendarEventQueryService;

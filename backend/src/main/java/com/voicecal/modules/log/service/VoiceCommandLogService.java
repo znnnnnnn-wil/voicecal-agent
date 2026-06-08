@@ -1,6 +1,6 @@
 package com.voicecal.modules.log.service;
 
-import com.voicecal.modules.log.response.VoiceCommandLogResponse;
+import com.voicecal.modules.log.entity.response.VoiceCommandLogResponse;
 import java.util.List;
 
 /**

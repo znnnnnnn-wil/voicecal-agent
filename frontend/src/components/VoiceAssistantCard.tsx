@@ -56,6 +56,7 @@ function VoiceAssistantCard({
     volume,
     recordingDurationMs,
     transcribeDurationMs,
+    lastRecordingUrl,
     startListening,
     stopListening,
     resetTranscript,
@@ -157,6 +158,14 @@ function VoiceAssistantCard({
           录音 {Math.round(recordingDurationMs / 1000)}s
           {transcribeDurationMs > 0 ? ` · 识别 ${transcribeDurationMs}ms` : ''}
         </p>
+        {lastRecordingUrl && (
+          <div className="mt-3 w-full rounded-lg border border-[#e5e7eb] bg-white p-3 text-left">
+            <p className="mb-2 text-xs font-semibold text-[#202124]">最近一次录音</p>
+            <audio className="w-full" controls src={lastRecordingUrl}>
+              当前浏览器不支持音频播放。
+            </audio>
+          </div>
+        )}
       </div>
 
       <div className="mt-3 flex items-center justify-between gap-3 rounded-xl border border-[#e5e7eb] bg-white px-3 py-2.5">

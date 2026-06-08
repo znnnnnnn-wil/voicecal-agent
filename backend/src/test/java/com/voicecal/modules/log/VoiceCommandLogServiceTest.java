@@ -1,7 +1,7 @@
 package com.voicecal.modules.log;
 
-import com.voicecal.modules.log.repository.VoiceCommandLogRepository;
-import com.voicecal.modules.log.response.VoiceCommandLogResponse;
+import com.voicecal.dao.repository.VoiceCommandLogRepository;
+import com.voicecal.modules.log.entity.response.VoiceCommandLogResponse;
 import com.voicecal.modules.log.service.VoiceCommandLogService;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;

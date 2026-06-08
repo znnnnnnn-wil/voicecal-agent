@@ -3,7 +3,7 @@ import type { ApiResponse } from '../types/api'
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL?.trim() ?? ''
 
 type RequestOptions = {
-  method: 'GET' | 'POST'
+  method: 'DELETE' | 'GET' | 'POST'
   body?: unknown
 }
 
@@ -13,6 +13,10 @@ export function apiGet<T>(path: string): Promise<T> {
 
 export function apiPost<TRequest, TResponse>(path: string, body: TRequest): Promise<TResponse> {
   return request<TResponse>(path, { method: 'POST', body })
+}
+
+export function apiDelete<TResponse>(path: string): Promise<TResponse> {
+  return request<TResponse>(path, { method: 'DELETE' })
 }
 
 export function apiPostForm<TResponse>(path: string, body: FormData): Promise<TResponse> {

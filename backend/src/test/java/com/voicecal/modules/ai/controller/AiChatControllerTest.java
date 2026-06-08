@@ -2,7 +2,7 @@ package com.voicecal.modules.ai.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.voicecal.dao.repository.CalendarEventRepository;
-import com.voicecal.modules.log.repository.VoiceCommandLogRepository;
+import com.voicecal.dao.repository.VoiceCommandLogRepository;
 import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

@@ -22,6 +22,7 @@ import { chatWithAi, getDailySummary as fetchDailySummary } from './services/aiS
 import {
   getTodayEvents as fetchTodayEvents,
   getWeekEvents as fetchWeekEvents,
+  deleteCalendarEvent,
   listCalendarEvents as fetchCalendarEvents,
 } from './services/calendarService'
 import { getRecentLogs as fetchRecentLogs } from './services/logService'
@@ -311,6 +312,24 @@ function App() {
     setReminderToasts((current) => current.filter((reminder) => reminder.toastId !== toastId))
   }, [])
 
+  const handleDeleteEvent = useCallback(
+    async (event: CalendarEvent) => {
+      await deleteCalendarEvent(event.id)
+      setSelectedEvent(null)
+      setCalendarEvents((current) => current.filter((item) => item.id !== event.id))
+      setTodayEvents((current) => current.filter((item) => item.id !== event.id))
+      setWeekEvents((current) => current.filter((item) => item.id !== event.id))
+      await Promise.all([
+        loadCalendarEvents(),
+        loadTodayEvents(),
+        loadWeekEvents(),
+        loadDailySummary(),
+        loadRecentReminders(),
+      ])
+    },
+    [loadCalendarEvents, loadDailySummary, loadRecentReminders, loadTodayEvents, loadWeekEvents],
+  )
+
   const handleRunCommand = async (nextCommand?: string) => {
     const commandText = (nextCommand ?? command).trim()
     const now = Date.now()
@@ -397,7 +416,7 @@ function App() {
         </section>
 
         <aside className="space-y-4 lg:col-span-2 xl:sticky xl:top-20 xl:col-span-1 xl:max-h-[calc(100vh-6rem)] xl:overflow-y-auto">
-          <EventDetailPanel event={selectedEvent} onClose={() => setSelectedEvent(null)} />
+          <EventDetailPanel event={selectedEvent} onClose={() => setSelectedEvent(null)} onDelete={handleDeleteEvent} />
           <AiReplyPanel reply={reply} state={replyState} />
           <DailySummaryCard
             error={summaryError}
