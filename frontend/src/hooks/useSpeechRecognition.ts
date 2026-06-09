@@ -46,8 +46,6 @@ export function useSpeechRecognition() {
   const [volume, setVolume] = useState(0)
   const [recordingDurationMs, setRecordingDurationMs] = useState(0)
   const [transcribeDurationMs, setTranscribeDurationMs] = useState(0)
-  const [lastRecordingUrl, setLastRecordingUrl] = useState<string | null>(null)
-  const lastRecordingUrlRef = useRef<string | null>(null)
   const chunksRef = useRef<BlobPart[]>([])
   const mediaRecorderRef = useRef<MediaRecorder | null>(null)
   const streamRef = useRef<MediaStream | null>(null)
@@ -193,12 +191,6 @@ export function useSpeechRecognition() {
         const audioBlob = pcmChunksRef.current.length > 0
           ? encodeWav(pcmChunksRef.current, sampleRateRef.current)
           : new Blob(chunksRef.current, { type: recorder.mimeType || 'audio/webm' })
-        if (lastRecordingUrlRef.current) {
-          URL.revokeObjectURL(lastRecordingUrlRef.current)
-        }
-        const recordingUrl = URL.createObjectURL(audioBlob)
-        lastRecordingUrlRef.current = recordingUrl
-        setLastRecordingUrl(recordingUrl)
         chunksRef.current = []
         pcmChunksRef.current = []
         if (audioBlob.size === 0) {
@@ -258,10 +250,6 @@ export function useSpeechRecognition() {
         mediaRecorderRef.current.stop()
       }
       releaseStream()
-      if (lastRecordingUrlRef.current) {
-        URL.revokeObjectURL(lastRecordingUrlRef.current)
-        lastRecordingUrlRef.current = null
-      }
     }
   }, [cleanupVad, releaseStream])
 
@@ -274,7 +262,6 @@ export function useSpeechRecognition() {
     volume,
     recordingDurationMs,
     transcribeDurationMs,
-    lastRecordingUrl,
     startListening,
     stopListening,
     resetTranscript,

@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 /**
- * 璇煶杞啓鍏煎鍏ュ彛锛岄潰鍚戝墠绔闊抽摼璺€?
+ * 语音转写兼容入口，面向前端语音链路。
  */
 @RestController
 @RequestMapping("/api/voice")
@@ -23,12 +23,12 @@ public class SpeechTranscriptionController {
     }
 
     /**
-     * 涓婁紶闊抽骞惰繑鍥炶瘑鍒枃鏈€?
+     * 上传音频并返回识别文本。
      *
-     * @param audio 闊抽鏂囦欢
-     * @param language 鍙€夎瑷€鍙傛暟锛屽綋鍓嶉鐣?
-     * @param contextPrompt 鍙€変笂涓嬫枃鎻愮ず锛屽綋鍓嶉鐣?
-     * @return 璇嗗埆缁撴灉
+     * @param audio 音频文件
+     * @param language 可选语言参数，当前预留
+     * @param contextPrompt 可选上下文提示，当前预留
+     * @return 识别结果
      */
     @PostMapping("/transcribe")
     public ApiResponse<SpeechTranscriptionResponse> transcribe(
@@ -36,6 +36,6 @@ public class SpeechTranscriptionController {
             @RequestParam(value = "language", required = false) String language,
             @RequestParam(value = "contextPrompt", required = false) String contextPrompt
     ) {
-        return ApiResponse.success("璇嗗埆鎴愬姛", speechTranscriptionService.transcribe(audio));
+        return ApiResponse.success("识别成功", speechTranscriptionService.transcribe(audio));
     }
 }
