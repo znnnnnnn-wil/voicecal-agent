@@ -6,7 +6,7 @@ import java.util.Optional;
  * 快速规则路由结果。
  *
  * @param matched 是否命中
- * @param type 路由类型
+ * @param type    路由类型
  */
 public record FastCommandRouteResult(boolean matched, FastCommandType type) {
 

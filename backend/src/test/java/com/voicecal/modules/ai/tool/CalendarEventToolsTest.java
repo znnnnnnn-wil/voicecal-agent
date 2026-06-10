@@ -61,6 +61,39 @@ class CalendarEventToolsTest {
     }
 
     @Test
+    void searchCalendarEvents_shouldReturnMatchingMeetingAtExactTime() {
+        CalendarEvent meeting = createEvent("下午会议", 15, 16);
+        meeting.setCategory(EventCategory.MEETING);
+        calendarEventRepository.save(meeting);
+        calendarEventRepository.save(createEvent("下午写作业", 15, 16));
+        calendarEventRepository.save(createEvent("上午会议", 9, 10));
+        calendarEventRepository.flush();
+
+        String result = calendarEventTools.searchCalendarEvents(
+                "2026-05-29T15:00:00",
+                "2026-05-29T15:00:00",
+                null,
+                "MEETING"
+        );
+
+        assertThat(result)
+                .contains("找到匹配日程", "下午会议")
+                .doesNotContain("下午写作业", "上午会议");
+    }
+
+    @Test
+    void searchCalendarEvents_shouldReturnClearError_whenRangeIsInvalid() {
+        String result = calendarEventTools.searchCalendarEvents(
+                "2026-05-29T16:00:00",
+                "2026-05-29T15:00:00",
+                "会议",
+                "MEETING"
+        );
+
+        assertThat(result).contains("查询日程失败", "rangeEnd");
+    }
+
+    @Test
     void createCalendarEvent_shouldCreateEvent() {
         String result = calendarEventTools.createCalendarEvent(
                 "工具创建会议",

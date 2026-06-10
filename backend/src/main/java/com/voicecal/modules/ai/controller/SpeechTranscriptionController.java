@@ -26,15 +26,11 @@ public class SpeechTranscriptionController {
      * 上传音频并返回识别文本。
      *
      * @param audio 音频文件
-     * @param language 可选语言参数，当前预留
-     * @param contextPrompt 可选上下文提示，当前预留
      * @return 识别结果
      */
     @PostMapping("/transcribe")
     public ApiResponse<SpeechTranscriptionResponse> transcribe(
-            @RequestParam("audio") MultipartFile audio,
-            @RequestParam(value = "language", required = false) String language,
-            @RequestParam(value = "contextPrompt", required = false) String contextPrompt
+            @RequestParam("audio") MultipartFile audio
     ) {
         return ApiResponse.success("识别成功", speechTranscriptionService.transcribe(audio));
     }
