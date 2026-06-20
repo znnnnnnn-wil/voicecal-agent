@@ -1,7 +1,9 @@
 package com.voicecal.modules.calendar.service;
 
 import com.voicecal.modules.calendar.entity.response.CalendarEventResponse;
+import com.voicecal.common.enums.dao.EventCategory;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.List;
 
@@ -43,6 +45,22 @@ public interface CalendarEventQueryService {
      * @return 指定日期内的日程列表
      */
     List<CalendarEventResponse> getEventsForDate(LocalDate date, ZoneId zoneId);
+
+    /**
+     * 按时间范围、关键词和分类搜索日程。
+     *
+     * @param rangeStart 查询范围开始时间
+     * @param rangeEnd 查询范围结束时间；等于 rangeStart 时表示精确时间点查询
+     * @param keyword 标题或描述关键词，可为空
+     * @param category 日程分类，可为空
+     * @return 匹配条件的日程列表
+     */
+    List<CalendarEventResponse> searchEvents(
+            LocalDateTime rangeStart,
+            LocalDateTime rangeEnd,
+            String keyword,
+            EventCategory category
+    );
 
     /**
      * 解析时区参数。

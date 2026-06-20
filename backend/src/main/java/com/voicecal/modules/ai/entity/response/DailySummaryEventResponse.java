@@ -1,4 +1,4 @@
-package com.voicecal.modules.ai.response;
+package com.voicecal.modules.ai.entity.response;
 
 import com.voicecal.common.enums.dao.EventCategory;
 import com.voicecal.modules.calendar.entity.response.CalendarEventResponse;

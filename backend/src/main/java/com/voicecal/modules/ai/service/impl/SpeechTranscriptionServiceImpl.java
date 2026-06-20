@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.voicecal.common.enums.ResultCodeEnum;
 import com.voicecal.common.exception.CustomException;
-import com.voicecal.modules.ai.response.SpeechTranscriptionResponse;
+import com.voicecal.modules.ai.entity.response.SpeechTranscriptionResponse;
 import com.voicecal.modules.ai.service.SpeechTranscriptionService;
 import java.io.IOException;
 import java.net.URI;
@@ -31,8 +31,17 @@ public class SpeechTranscriptionServiceImpl implements SpeechTranscriptionServic
     private static final String DEFAULT_AUDIO_MIME_TYPE = "audio/webm";
     private static final int MAX_LOG_BODY_LENGTH = 1000;
     private static final String CONTEXT_PROMPT = """
-            VoiceCal Agent 是语音日历助手。常见词包括：日程、会议、提醒、提交代码、项目、面试、今天、明天、后天、上午、下午、晚上、下周、空闲、删除、确认、取消、导出 ICS。常见分类包括：工作、学习、生活、会议、面试、其他。
-            """;
+        你是中文语音日历助手的语音识别模块。
+        请只输出用户说出的原文，不要解释，不要补充回答。
+        用户通常会说创建、查询、修改、删除日程提醒相关的话。
+        请特别准确识别时间表达：
+        今天、明天、后天、上午、下午、晚上、中午、凌晨、几点、半小时后、一小时后、下周一、下周二、本周五。
+        请特别准确识别日程任务：
+        提交代码、项目会、开会、面试、上课、写作业、复习、考试、交作业、导出 ICS、查看空闲时间。
+        不要省略时间词，不要省略“几点”。
+        如果听到“三点”，不要识别成“几点”。
+        如果听到“提交代码”，不要识别成“提交代买”“提交打卡”。
+        """;
 
     private final ObjectMapper objectMapper;
     private final HttpClient httpClient;

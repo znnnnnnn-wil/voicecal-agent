@@ -1,6 +1,7 @@
 package com.voicecal.modules.calendar.service.impl;
 
 import com.voicecal.common.enums.ResultCodeEnum;
+import com.voicecal.common.enums.dao.EventCategory;
 import com.voicecal.common.enums.dao.EventStatus;
 import com.voicecal.common.exception.CustomException;
 import com.voicecal.dao.entity.CalendarEvent;
@@ -92,6 +93,52 @@ public class CalendarEventQueryServiceImpl implements CalendarEventQueryService 
     }
 
     /**
+     *
+     * @param rangeStart 查询范围开始时间
+     * @param rangeEnd 查询范围结束时间；等于 rangeStart 时表示精确时间点查询
+     * @param keyword 标题或描述关键词，可为空
+     * @param category 日程分类，可为空
+     * @return 指定日期内的日程列表
+     */
+    @Override
+    @Transactional(readOnly = true)
+    public List<CalendarEventResponse> searchEvents(
+            LocalDateTime rangeStart,
+            LocalDateTime rangeEnd,
+            String keyword,
+            EventCategory category
+    ) {
+        if (rangeStart == null || rangeEnd == null) {
+            throw CustomException.create(ResultCodeEnum.PARAMS_ERROR, "rangeStart 和 rangeEnd 不能为空");
+        }
+        if (rangeEnd.isBefore(rangeStart)) {
+            throw CustomException.create(ResultCodeEnum.PARAMS_ERROR, "rangeEnd 不能早于 rangeStart");
+        }
+        String normalizedKeyword = normalizeKeyword(keyword);
+        if (rangeStart.equals(rangeEnd)) {
+            return calendarEventRepository.searchEventsAtPoint(
+                            rangeStart,
+                            normalizedKeyword,
+                            category,
+                            EventStatus.ACTIVE
+                    )
+                    .stream()
+                    .map(CalendarEventResponse::from)
+                    .toList();
+        }
+        return calendarEventRepository.searchOverlappingEvents(
+                        rangeStart,
+                        rangeEnd,
+                        normalizedKeyword,
+                        category,
+                        EventStatus.ACTIVE
+                )
+                .stream()
+                .map(CalendarEventResponse::from)
+                .toList();
+    }
+
+    /**
      * 解析时区参数。
      *
      * @param timezone 时区 ID，可为空
@@ -133,5 +180,12 @@ public class CalendarEventQueryServiceImpl implements CalendarEventQueryService 
                 .stream()
                 .map(CalendarEventResponse::from)
                 .toList();
+    }
+
+    private String normalizeKeyword(String keyword) {
+        if (keyword == null || keyword.isBlank()) {
+            return null;
+        }
+        return keyword.trim();
     }
 }

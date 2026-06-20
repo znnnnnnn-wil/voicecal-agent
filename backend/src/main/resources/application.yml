@@ -29,14 +29,14 @@ voicecal:
   ai:
     qwen:
       base-url: ${QWEN_BASE_URL:https://dashscope.aliyuncs.com/compatible-mode/v1}
-      api-key: ${DASHSCOPE_API_KEY:}
+      api-key: ${DASHSCOPE_API_KEY:sk-fd984d1802194e4f901cf9113ac85c95}
       model-name: ${QWEN_MODEL_NAME:qwen3.6-flash}
       temperature: ${QWEN_TEMPERATURE:0.2}
-      timeout-seconds: ${QWEN_TIMEOUT_SECONDS:60}
-      max-retries: ${QWEN_MAX_RETRIES:1}
+      timeout-seconds: ${QWEN_TIMEOUT_SECONDS:12}
+      max-retries: ${QWEN_MAX_RETRIES:0}
     speech:
       base-url: ${QWEN_ASR_BASE_URL:${QWEN_BASE_URL:https://dashscope.aliyuncs.com/compatible-mode/v1}}
-      api-key: ${DASHSCOPE_API_KEY:}
+      api-key: ${DASHSCOPE_API_KEY:sk-fd984d1802194e4f901cf9113ac85c95}
       model-name: ${QWEN_ASR_MODEL:${QWEN_ASR_MODEL_NAME:qwen3-asr-flash}}
-      timeout-seconds: ${QWEN_ASR_TIMEOUT_SECONDS:60}
+      timeout-seconds: ${QWEN_ASR_TIMEOUT_SECONDS:12}
       max-audio-bytes: ${QWEN_ASR_MAX_AUDIO_BYTES:10485760}

@@ -128,6 +128,70 @@ public interface CalendarEventRepository extends JpaRepository<CalendarEvent, Lo
     );
 
     /**
+     * 按时间范围、关键词和分类组合搜索有交集的日程。
+     *
+     * @param rangeStart 查询范围开始时间
+     * @param rangeEnd 查询范围结束时间
+     * @param keyword 标题或描述关键词，可为空
+     * @param category 日程分类，可为空
+     * @param status 日程状态
+     * @return 符合条件的日程列表
+     */
+    @Query("""
+            select event
+            from CalendarEvent event
+            where event.status = :status
+              and event.startTime < :rangeEnd
+              and event.endTime > :rangeStart
+              and (:category is null or event.category = :category)
+              and (
+                    :keyword is null
+                    or lower(event.title) like lower(concat('%', :keyword, '%'))
+                    or lower(coalesce(event.description, '')) like lower(concat('%', :keyword, '%'))
+              )
+            order by event.startTime asc
+            """)
+    List<CalendarEvent> searchOverlappingEvents(
+            @Param("rangeStart") LocalDateTime rangeStart,
+            @Param("rangeEnd") LocalDateTime rangeEnd,
+            @Param("keyword") String keyword,
+            @Param("category") EventCategory category,
+            @Param("status") EventStatus status
+    );
+
+    /**
+     * 按精确时间点、关键词和分类组合搜索日程。
+     *
+     * @param pointTime 查询时间点
+     * @param keyword 标题或描述关键词，可为空
+     * @param category 日程分类，可为空
+     * @param status 日程状态
+     * @return 符合条件的日程列表
+     */
+    @Query("""
+            select event
+            from CalendarEvent event
+            where event.status = :status
+              and (
+                    (event.startTime = :pointTime and event.endTime = :pointTime)
+                    or (event.startTime <= :pointTime and event.endTime > :pointTime)
+              )
+              and (:category is null or event.category = :category)
+              and (
+                    :keyword is null
+                    or lower(event.title) like lower(concat('%', :keyword, '%'))
+                    or lower(coalesce(event.description, '')) like lower(concat('%', :keyword, '%'))
+              )
+            order by event.startTime asc
+            """)
+    List<CalendarEvent> searchEventsAtPoint(
+            @Param("pointTime") LocalDateTime pointTime,
+            @Param("keyword") String keyword,
+            @Param("category") EventCategory category,
+            @Param("status") EventStatus status
+    );
+
+    /**
      * 按 ID 和状态查询单个日程。
      *
      * @param id 日程 ID

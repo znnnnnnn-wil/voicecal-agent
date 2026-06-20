@@ -1,4 +1,4 @@
-package com.voicecal.modules.ai.response;
+package com.voicecal.modules.ai.entity.response;
 
 /**
  * AI 对话响应。

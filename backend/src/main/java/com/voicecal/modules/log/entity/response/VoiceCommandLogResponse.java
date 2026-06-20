@@ -1,6 +1,6 @@
-package com.voicecal.modules.log.response;
+package com.voicecal.modules.log.entity.response;
 
-import com.voicecal.modules.log.entity.VoiceCommandLog;
+import com.voicecal.dao.entity.VoiceCommandLog;
 import java.time.LocalDateTime;
 
 /**

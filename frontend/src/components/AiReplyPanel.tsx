@@ -1,3 +1,5 @@
+import { downloadCalendarIcs } from '../services/icsService'
+
 export type ReplyState = 'empty' | 'idle' | 'loading' | 'success' | 'error'
 
 type AiReplyPanelProps = {
@@ -47,23 +49,32 @@ function AiReplyPanel({ reply, state }: AiReplyPanelProps) {
 }
 
 function renderReply(reply: string) {
-  const linkPattern = /(\/api\/calendar\/events\/(?:\d+\/ics|ics\?[^\s，。；\n]+))/g
-  const exactLinkPattern = /^\/api\/calendar\/events\/(?:\d+\/ics|ics\?[^\s，。；\n]+)$/
+  const linkPattern = /(\/api\/calendar\/events\/(?:\d+\/ics|ics\?[^\s，。；)\]\n]+))/g
+  const exactLinkPattern = /^\/api\/calendar\/events\/(?:\d+\/ics|ics\?[^\s，。；)\]\n]+)$/
   return reply.split(linkPattern).map((part, index) => {
     if (!exactLinkPattern.test(part)) {
       return part
     }
+    const downloadUrl = cleanIcsUrl(part)
     return (
-      <a
+      <button
         className="font-semibold text-[#1a73e8] underline underline-offset-2 hover:text-[#1765cc]"
-        download
-        href={part}
-        key={`${part}-${index}`}
+        key={`${downloadUrl}-${index}`}
+        onClick={() => {
+          void downloadCalendarIcs(downloadUrl).catch((error) => {
+            window.alert(error instanceof Error ? error.message : '导出 ICS 失败，请稍后重试。')
+          })
+        }}
+        type="button"
       >
         下载 ICS
-      </a>
+      </button>
     )
   })
+}
+
+function cleanIcsUrl(value: string) {
+  return value.replace(/[)\]，。；,.;]+$/g, '')
 }
 
 export default AiReplyPanel

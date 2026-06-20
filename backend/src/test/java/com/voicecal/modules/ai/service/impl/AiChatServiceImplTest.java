@@ -1,8 +1,8 @@
 package com.voicecal.modules.ai.service.impl;
 
 import com.voicecal.common.enums.dao.EventCategory;
-import com.voicecal.modules.ai.request.AiChatRequest;
-import com.voicecal.modules.ai.response.AiChatResponse;
+import com.voicecal.modules.ai.entity.request.AiChatRequest;
+import com.voicecal.modules.ai.entity.response.AiChatResponse;
 import com.voicecal.modules.ai.service.VoiceCalAssistant;
 import com.voicecal.modules.assistant.router.FastCommandRouteResult;
 import com.voicecal.modules.assistant.router.FastCommandRouter;
@@ -10,7 +10,7 @@ import com.voicecal.modules.assistant.router.FastCommandType;
 import com.voicecal.modules.calendar.entity.response.CalendarEventResponse;
 import com.voicecal.modules.calendar.service.CalendarAvailabilityService;
 import com.voicecal.modules.calendar.service.CalendarEventQueryService;
-import com.voicecal.modules.log.response.VoiceCommandLogResponse;
+import com.voicecal.modules.log.entity.response.VoiceCommandLogResponse;
 import com.voicecal.modules.log.service.VoiceCommandLogService;
 import java.time.LocalDateTime;
 import java.time.ZoneId;

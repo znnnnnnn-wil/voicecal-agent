@@ -1,4 +1,4 @@
-package com.voicecal.modules.ai.config;
+package com.voicecal.common.config;
 
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.openai.OpenAiChatModel;

@@ -1,6 +1,6 @@
 package com.voicecal.modules.ai.service;
 
-import com.voicecal.modules.ai.response.SpeechTranscriptionResponse;
+import com.voicecal.modules.ai.entity.response.SpeechTranscriptionResponse;
 import org.springframework.web.multipart.MultipartFile;
 
 /**

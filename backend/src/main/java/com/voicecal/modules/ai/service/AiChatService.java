@@ -1,7 +1,7 @@
 package com.voicecal.modules.ai.service;
 
-import com.voicecal.modules.ai.request.AiChatRequest;
-import com.voicecal.modules.ai.response.AiChatResponse;
+import com.voicecal.modules.ai.entity.request.AiChatRequest;
+import com.voicecal.modules.ai.entity.response.AiChatResponse;
 
 /**
  * AI 对话服务接口。

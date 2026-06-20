@@ -6,6 +6,7 @@ import type { CalendarEvent } from '../types/calendar'
 type EventDetailPanelProps = {
   event: CalendarEvent | null
   onClose: () => void
+  onDelete: (event: CalendarEvent) => Promise<void>
 }
 
 const dateTimeFormatter = new Intl.DateTimeFormat('zh-CN', {
@@ -15,20 +16,37 @@ const dateTimeFormatter = new Intl.DateTimeFormat('zh-CN', {
   minute: '2-digit',
 })
 
-function EventDetailPanel({ event, onClose }: EventDetailPanelProps) {
+function EventDetailPanel({ event, onClose, onDelete }: EventDetailPanelProps) {
   const [isExporting, setIsExporting] = useState(false)
-  const [exportError, setExportError] = useState<string | null>(null)
+  const [isDeleting, setIsDeleting] = useState(false)
+  const [actionError, setActionError] = useState<string | null>(null)
 
   const handleExportIcs = async () => {
     if (!event) return
     setIsExporting(true)
-    setExportError(null)
+    setActionError(null)
     try {
       await downloadEventIcs(event.id)
     } catch (error) {
-      setExportError(getErrorMessage(error))
+      setActionError(getErrorMessage(error, '导出 ICS 失败，请稍后重试。'))
     } finally {
       setIsExporting(false)
+    }
+  }
+
+  const handleDelete = async () => {
+    if (!event) return
+    const confirmed = window.confirm(`确定删除日程「${event.title}」吗？此操作不可撤销。`)
+    if (!confirmed) return
+
+    setIsDeleting(true)
+    setActionError(null)
+    try {
+      await onDelete(event)
+    } catch (error) {
+      setActionError(getErrorMessage(error, '删除日程失败，请稍后重试。'))
+    } finally {
+      setIsDeleting(false)
     }
   }
 
@@ -72,18 +90,29 @@ function EventDetailPanel({ event, onClose }: EventDetailPanelProps) {
               </div>
               <ReminderBadge event={event} />
             </div>
-            <button
-              aria-label="导出当前日程 ICS 文件"
-              className="mt-3 w-full rounded-lg border border-blue-200 bg-white px-3 py-2 text-xs font-semibold text-[#1a73e8] transition hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-60"
-              disabled={isExporting}
-              onClick={handleExportIcs}
-              type="button"
-            >
-              {isExporting ? '导出中...' : '导出 ICS'}
-            </button>
-            {exportError && (
+            <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
+              <button
+                aria-label="导出当前日程 ICS 文件"
+                className="rounded-lg border border-blue-200 bg-white px-3 py-2 text-xs font-semibold text-[#1a73e8] transition hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-60"
+                disabled={isExporting || isDeleting}
+                onClick={handleExportIcs}
+                type="button"
+              >
+                {isExporting ? '导出中...' : '导出 ICS'}
+              </button>
+              <button
+                aria-label="删除当前日程"
+                className="rounded-lg border border-rose-200 bg-white px-3 py-2 text-xs font-semibold text-rose-600 transition hover:bg-rose-50 disabled:cursor-not-allowed disabled:opacity-60"
+                disabled={isExporting || isDeleting}
+                onClick={handleDelete}
+                type="button"
+              >
+                {isDeleting ? '删除中...' : '删除日程'}
+              </button>
+            </div>
+            {actionError && (
               <p className="mt-3 rounded-lg border border-rose-200 bg-rose-50 p-3 text-xs leading-5 text-rose-700">
-                {exportError}
+                {actionError}
               </p>
             )}
           </div>
@@ -150,9 +179,9 @@ function formatDateTime(value: string) {
   return dateTimeFormatter.format(new Date(value))
 }
 
-function getErrorMessage(error: unknown) {
+function getErrorMessage(error: unknown, fallback: string) {
   if (error instanceof Error) return error.message
-  return '导出 ICS 失败，请稍后重试。'
+  return fallback
 }
 
 export default EventDetailPanel

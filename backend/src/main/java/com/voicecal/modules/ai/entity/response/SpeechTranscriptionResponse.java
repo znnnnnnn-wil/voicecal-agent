@@ -1,4 +1,4 @@
-package com.voicecal.modules.ai.response;
+package com.voicecal.modules.ai.entity.response;
 
 /**
  * 语音转文本响应对象。

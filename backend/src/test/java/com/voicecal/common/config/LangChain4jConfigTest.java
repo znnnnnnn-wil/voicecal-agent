@@ -1,4 +1,4 @@
-package com.voicecal.modules.ai.config;
+package com.voicecal.common.config;
 
 import com.voicecal.modules.ai.service.VoiceCalAssistant;
 import com.voicecal.modules.ai.tool.CalendarEventTools;

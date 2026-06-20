@@ -13,6 +13,7 @@ import com.voicecal.modules.calendar.entity.response.ConflictCheckResponse;
 import com.voicecal.modules.calendar.entity.response.ConflictEventResponse;
 import com.voicecal.modules.calendar.entity.response.FreeTimeSlotResponse;
 import com.voicecal.modules.calendar.service.CalendarAvailabilityService;
+import com.voicecal.modules.calendar.service.CalendarEventQueryService;
 import com.voicecal.modules.calendar.service.CalendarEventService;
 import com.voicecal.modules.calendar.service.IcsExportService;
 import dev.langchain4j.agent.tool.P;
@@ -34,15 +35,18 @@ import org.springframework.stereotype.Component;
 public class CalendarEventTools {
 
     private final CalendarEventService calendarEventService;
+    private final CalendarEventQueryService calendarEventQueryService;
     private final CalendarAvailabilityService calendarAvailabilityService;
     private final IcsExportService icsExportService;
 
     public CalendarEventTools(
             CalendarEventService calendarEventService,
+            CalendarEventQueryService calendarEventQueryService,
             CalendarAvailabilityService calendarAvailabilityService,
             IcsExportService icsExportService
     ) {
         this.calendarEventService = calendarEventService;
+        this.calendarEventQueryService = calendarEventQueryService;
         this.calendarAvailabilityService = calendarAvailabilityService;
         this.icsExportService = icsExportService;
     }
@@ -71,6 +75,40 @@ public class CalendarEventTools {
     public String getCalendarEventById(@P(name = "id", description = "Calendar event id") Long id) {
         try {
             return formatEvent(calendarEventService.getEvent(id));
+        } catch (CustomException exception) {
+            return "查询日程失败：" + exception.getMessage();
+        }
+    }
+
+    /**
+     * 按时间范围、关键词和分类搜索日程。
+     *
+     * @param startTime 查询开始时间，ISO-8601 LocalDateTime 字符串
+     * @param endTime 查询结束时间，ISO-8601 LocalDateTime 字符串
+     * @param keyword 标题或描述关键词，可为空
+     * @param category 日程分类，可为空
+     * @return 匹配日程文本
+     */
+    @Tool("Search calendar events by time range, optional keyword, and optional category. Use this before getCalendarEventById when the user identifies an event by date, time, title, or type instead of id. For an exact time, pass the same ISO-8601 LocalDateTime as startTime and endTime.")
+    public String searchCalendarEvents(
+            @P(name = "startTime", description = "Search range start time in ISO-8601 LocalDateTime format") String startTime,
+            @P(name = "endTime", description = "Search range end time in ISO-8601 LocalDateTime format. For an exact time, use the same value as startTime.") String endTime,
+            @P(name = "keyword", description = "Optional title or description keyword from the user's request", required = false) String keyword,
+            @P(name = "category", description = "Optional calendar event category: WORK, STUDY, LIFE, MEETING, INTERVIEW, OTHER. Use MEETING when the user asks for a meeting.", required = false) String category
+    ) {
+        try {
+            List<CalendarEventResponse> events = calendarEventQueryService.searchEvents(
+                    parseDateTime(startTime),
+                    parseDateTime(endTime),
+                    normalizeBlank(keyword),
+                    parseCategory(category)
+            );
+            if (events.isEmpty()) {
+                return "没有找到匹配的日程。";
+            }
+            return "找到匹配日程：\n" + formatEvents(events);
+        } catch (DateTimeParseException exception) {
+            return "查询日程失败：时间格式不正确，请使用 ISO-8601 LocalDateTime，例如 2026-06-01T10:00:00";
         } catch (CustomException exception) {
             return "查询日程失败：" + exception.getMessage();
         }

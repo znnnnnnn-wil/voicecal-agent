@@ -1,4 +1,4 @@
-package com.voicecal.modules.ai.request;
+package com.voicecal.modules.ai.entity.request;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;

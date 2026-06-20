@@ -1,8 +1,16 @@
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL?.trim() ?? ''
 
 export async function downloadEventIcs(eventId: number): Promise<void> {
-  const response = await fetch(buildUrl(`/api/calendar/events/${eventId}/ics`), {
-    headers: { Accept: 'text/calendar' },
+  await downloadIcs(`/api/calendar/events/${eventId}/ics`, `voicecal-event-${eventId}.ics`)
+}
+
+export async function downloadCalendarIcs(path: string): Promise<void> {
+  await downloadIcs(path, 'voicecal-events.ics')
+}
+
+async function downloadIcs(path: string, fallbackFileName: string): Promise<void> {
+  const response = await fetch(buildUrl(path), {
+    headers: { Accept: 'text/calendar, application/json' },
   }).catch(() => {
     throw new Error('无法连接后端服务，请确认 Spring Boot 已启动。')
   })
@@ -15,7 +23,7 @@ export async function downloadEventIcs(eventId: number): Promise<void> {
   const objectUrl = URL.createObjectURL(blob)
   const anchor = document.createElement('a')
   anchor.href = objectUrl
-  anchor.download = getFileName(response, eventId)
+  anchor.download = getFileName(response, fallbackFileName)
   document.body.appendChild(anchor)
   anchor.click()
   anchor.remove()
@@ -44,8 +52,8 @@ async function readErrorMessage(response: Response) {
   }
 }
 
-function getFileName(response: Response, eventId: number) {
+function getFileName(response: Response, fallbackFileName: string) {
   const disposition = response.headers.get('Content-Disposition')
   const match = disposition?.match(/filename="?([^"]+)"?/)
-  return match?.[1] || `voicecal-event-${eventId}.ics`
+  return match?.[1] || fallbackFileName
 }

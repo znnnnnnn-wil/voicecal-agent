@@ -1,6 +1,6 @@
-package com.voicecal.modules.log.repository;
+package com.voicecal.dao.repository;
 
-import com.voicecal.modules.log.entity.VoiceCommandLog;
+import com.voicecal.dao.entity.VoiceCommandLog;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
