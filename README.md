@@ -1,40 +1,14 @@
 # VoiceCal Agent
 
-> 🎙️ VoiceCal Agent 是一个支持语音和文本指令的 AI 日程助手，用于创建、查询和管理本地日历日程。  
-> 项目围绕 **语音识别 + 大模型理解 + 日历工具调用 + 可视化日程管理** 构建，展示 AI Agent 在个人效率工具中的落地方式。
+基于 Java 17 和 Spring Boot 的语音日程助手：将语音或文本请求转为日历工具调用，完成日程查询、创建、修改与删除，并对冲突及修改/删除操作做检查。
 
----
+**核心技术：** Spring Boot · MySQL · Spring Data JPA · LangChain4j Tool Calling · React · TypeScript
 
-## 🎬 Demo 视频
+[观看 Demo 视频](https://www.bilibili.com/video/BV1qdVU6KEZ8/) · [在线体验](https://8-130-187-10.sslip.io/)
 
-> 本项目核心功能演示视频已上传至 Bilibili，可直接观看。
+**值得看的实现：** `FastCommandRouter` 直接处理部分高频安全查询；其他自然语言请求进入 Agent 工具调用流程。日程创建/修改进行冲突检测，修改与删除要求确认。下文记录具体功能、架构与启动方式。
 
-### 👉 [点击观看 VoiceCal Agent Demo 视频](https://www.bilibili.com/video/BV1qdVU6KEZ8/)
-
-视频覆盖内容：
-
-- 语音创建日程
-- 查询今天 / 明天 / 本周安排
-- 空闲时间查询
-- 冲突检测
-- 修改 / 删除确认机制
-- 日历可视化展示
-- 操作日志、提醒和每日摘要
-- README 与项目结构说明
-
----
-
-## 🌐 在线体验
-
-在线地址：
-
-```text
-https://8-130-187-10.sslip.io/
-```
-
-> 公网环境下，浏览器语音输入需要 HTTPS 才能正常访问麦克风权限。
-
----
+> 浏览器语音输入需要 HTTPS 才能获取麦克风权限。在线服务的可用性取决于部署状态。
 
 ## 项目简介
 
